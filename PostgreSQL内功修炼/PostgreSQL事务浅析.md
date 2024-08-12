@@ -2289,6 +2289,7 @@ pg的快照优化性能对比
 <https://mp.weixin.qq.com/s/j-8uRuZDRf4mHIQR_ZKIEg>
 
 
+# 可见性检查
 
 快照有了，就可以通过快照数据去判断元组的可见性。回顾一下（先不考虑子事务），事务的关键信息：元组头部事务信息、快照信息、clog事务状态(SetHintBits前需要）
 
@@ -2615,6 +2616,7 @@ HeapTupleSatisfiesMVCC(HeapTuple htup, Snapshot snapshot,
 
    - 元组有frozen标记时的可见性判断
   
+
 
 ### 什么是multixact？
 
