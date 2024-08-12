@@ -2616,9 +2616,8 @@ HeapTupleSatisfiesMVCC(HeapTuple htup, Snapshot snapshot,
 
    - 元组有frozen标记时的可见性判断
   
-
-
-### 什么是multixact？
+# multixact
+## 什么是multixact？
 
 在对同一行加锁时，元组上关联的事务ID可能有多个，pg将多个事务ID组合起来用一个MultiXactID来管理。TransactionId和MultiXactID是多对一的关系
 
@@ -2636,7 +2635,7 @@ MultiXactId的0、1都是系统使用，可分配的MultiXactId从2开始
 #define MaxMultiXactId		((MultiXactId) 0xFFFFFFFF)
 ```
 
-### **行锁的类型**
+## **行锁的类型**
 
 只有行上有锁时，才会有multixact。MultiXact总共定义了6种状态
 
@@ -2656,7 +2655,7 @@ MultiXactStatusUpdate = 0x05
 
 其中能显示声明的行锁的状态有4种：ForKeyShare，ForShare，ForNoKeyUpdate，ForUpdate
 
-### multixact的infomask标记
+## multixact的infomask标记
 
 pg会将行锁标记到xmax上并记录到infomask中
 源码`src/include/access/htup_details.h`
@@ -2706,7 +2705,7 @@ HEAP_XMAX_IS_MULTI的16进制值是1000，转换为10进制为4096，通过`(t_i
 - multixact id一般来说比transaction id小，所以这里t_xmax比t_xmin更小
 - 如果是一个update语句更新的元组，那么新旧元组的xmax肯定是相等的。但是在multixact的场景下，可能就不一样了。
 
-### multixact slru
+## multixact slru
 
 虽然`src/backend/access/transam/multixact.c`的开头定义很多变量和函数，有`page`,`member`,`membergoup`,`offset`，但是总体都是定义变量值，然后定义这些变量进行相互转化的函数
 
@@ -2767,7 +2766,7 @@ MultiXact页编号回卷于0xFFFFFFFF/MULTIXACT_OFFSETS_PER_PAGE=2^32^/2048=2^21
 
 `TruncateMultiXact()`会清理这些段包括页编号，`TruncateMultiXact()`被vacuum调用
 
-### **pg_multixact目录**
+## **pg_multixact目录**
 
 同CLOG，SUBTRANS日志一样，multixact日志SLRU缓冲池实现。`pg_multixact`目录下只有两个目录`member`,`offset`
 
@@ -2803,7 +2802,7 @@ typedef struct MultiXactMember
 } MultiXactMember;
 ```
 
-### multixact参考
+## multixact参考
 
 <https://www.postgresql.org/docs/current/routine-vacuuming.html>
 
@@ -2815,14 +2814,14 @@ typedef struct MultiXactMember
 
 <https://www.highgo.ca/2020/06/12/transactions-in-postgresql-and-their-mechanism/>
 
-
-### 什么是2PC事务？
+#2PC事务
+## 什么是2PC事务？
 
 事务原子性要求事务必须整体完成或者回滚。在多个联接的数据库等情况下的分布式事务中，必须为事务提供一致性状态，以满足分布式事务的原子性。与其他数据库一样，pg库也提供了 two-phase commit protocol(2PC)两阶段提交协议。
 
 分布式事务实现方案很多，2PC是其中最基础也是最常见的。分布式事务包括原子提交、原子可见性、全局一致性，2PC只是原子提交的实现方案。
 
-### prepare transaction
+## prepare transaction
 
 FDW可以自己处理2PC事务，pg也提供了显示使用2PC事务的方法prepare transaction。prepare transaction发起后，就不会与会话有任何关联，它状态会被保存下来。prepare transaction并不是设计为在应用或者交互式会话中使用，除非你在编写一个事务管理器，所以推荐（默认）关闭的。
 
@@ -2840,7 +2839,7 @@ ROLLBACK PREPARED transaction_id
 - PREPARE TRANSACTION 必须在事务块中，事务块以BEGIN|START STRANSATION开始
 - max_prepared_transactions控制prepare事务数，默认为0关闭，需要打开才能使用prepare事务
 
-### 开启一个prepare事务
+## 开启一个prepare事务
 
 ```sql
 lzldb=# begin;
@@ -2864,7 +2863,7 @@ lzldb=# select * from pg_prepared_xacts ;
 
 ```
 
-### pg_twophase目录 
+## pg_twophase目录 
 
 前面说过，prepare事务与会话无关，当开启一个prepare事务后，事务状态信息保存在缓存中。
 为了保证事务不丢失，prepare事务也会落盘，到`pg_twophase`目录。
@@ -2902,7 +2901,7 @@ total 4
 -rw------- 1 pg pg 116 Apr 29 16:33 000002D0
 ```
 
-### orphaned prepared transactions
+## orphaned prepared transactions
 
 如果一个prepared事务没有完成（prepared事务不提交或回滚），而prepared事务又与会话无关，如果不显示结束这个事务的话，prepared事务仍然存在（会话断开后一般事务会回退），这就是orphaned prepared transactions。
 orphaned prepared transactions会一直持有一些锁、元组的资源，导致vacuum无法回收和清理死元组，甚至阻止事务ID回卷。比如一个prepared事务忘记提交或者回滚了，如果没有外部事务管理机制来监控，这个parepared事务将可能不被发现并永远存在，最终导致严重的问题。所以建议`max_prepared_transactions=0`（默认）或者通过`pg_prepared_xacts`视图监控prepared事务
@@ -2941,7 +2940,7 @@ lzldb=# alter table lzl1 add column b int;
 ALTER TABLE
 ```
 
-###  2PC事务参考
+##  2PC事务参考
 
 <http://postgres.cn/docs/13/sql-prepare-transaction.html>
 
@@ -2949,8 +2948,8 @@ ALTER TABLE
 
 <https://wiki.postgresql.org/wiki/Atomic_Commit_of_Distributed_Transactions>
 
-
-### 什么是子事务？
+# 子事务
+## 什么是子事务？
 
 一般事务只能整体提交或回滚，而子事务允许部分事务回滚。
 
@@ -2958,7 +2957,7 @@ ALTER TABLE
 
 子事务在大批量数据写入的时候很有用。如果事务中存在多个子事务，而其中一小段子事务失败，只需要重做这小部分数据就行，而不需要整个事务数据全部重做。
 
-### 子事务在SQL语句中的使用
+## 子事务在SQL语句中的使用
 
 ```sql
 SAVEPOINT savepoint_name
@@ -3015,7 +3014,7 @@ lzldb=# select * from vlzl1;
 --子事务产生写入同样会消耗transaction id，而且cid在父事务框架下增加
 ```
 
-### **其他场景中产生子事务**
+## **其他场景中产生子事务**
 
 即使不用`savepoint`，也有其他方法产生子事务
 
@@ -3028,7 +3027,7 @@ lzldb=# select * from vlzl1;
 - PL/Python代码引用plpy.subtransaction()
 
 
-### 子事务SLRU缓存
+## 子事务SLRU缓存
 
 子事务提交日志在`pg_xact`，父子对应关系在`pg_subtrans`存储子事务缓存subXID和父XID的映射。当PostgreSQL需要查找subXID时，它会计算这个ID驻留在哪个内存页中，然后在内存页中进行搜索。如果页面不在缓存中，它会驱逐一个页面，并将所需的页面从pg_subtrans加载到内存中。大量的子事务cache miss会消耗系统的IO和cpu。
 
@@ -3066,7 +3065,7 @@ SUBTRANS_BUFFER能存储最多32*8k/4=65536个xid
 
 子事务xid在page中不一定是紧凑的，一个page可能少于2048个子事务id
 
-### 子事务的危害
+## 子事务的危害
 
 1. **PGPROC_MAX_CACHED_SUBXIDS溢出**
 
@@ -3149,7 +3148,7 @@ SELECT [some row] FOR UPDATE;
 
 子事务已经在国内外生产环境造成了非常多问题，有许多案例和问题分析。引用一下“Subtransactions are basically cursed. Rip em out.”
 
-### 子事务参考
+## 子事务参考
 
 <https://postgres.ai/blog/20210831-postgresql-subtransactions-considered-harmful>
 
@@ -3160,3 +3159,62 @@ SELECT [some row] FOR UPDATE;
 <https://about.gitlab.com/blog/2021/09/29/why-we-spent-the-last-month-eliminating-postgresql-subtransactions/>
 
 <https://buttondown.email/nelhage/archive/notes-on-some-postgresql-implementation-details/>
+
+
+
+
+# reference
+
+books：
+
+《postgresql指南 内幕探索》
+
+《postgresql实战》
+
+《postgresql技术内幕 事务处理深度探索》
+
+《postgresql数据库内核分析》
+
+https://edu.postgrespro.com/postgresql_internals-14_parts1-2_en.pdf
+
+官方资料：
+
+https://en.wikipedia.org/wiki/Concurrency_control
+
+https://wiki.postgresql.org/wiki/Hint_Bits
+
+https://www.postgresql.org/docs/current/routine-vacuuming.html#VACUUM-FOR-WRAPAROUND
+
+https://www.postgresql.org/docs/10/storage-page-layout.html
+
+https://www.postgresql.org/docs/13/pageinspect.html3
+
+pg事务必读文章 interdb
+
+https://www.interdb.jp/pg/pgsql05.html
+
+https://www.interdb.jp/pg/pgsql06.html
+
+
+
+源码大佬
+
+https://blog.csdn.net/Hehuyi_In/article/details/102920988
+
+https://blog.csdn.net/Hehuyi_In/article/details/127955762
+
+https://blog.csdn.net/Hehuyi_In/article/details/125023923
+
+pg的快照优化性能对比
+
+https://techcommunity.microsoft.com/t5/azure-database-for-postgresql/improving-postgres-connection-scalability-snapshots/ba-p/1806462
+
+其他资料
+
+https://brandur.org/postgres-atomicity
+
+https://mp.weixin.qq.com/s/j-8uRuZDRf4mHIQR_ZKIEg
+
+https://blog.csdn.net/postgrechina/article/details/49130743?spm=a2c6h.12873639.article-detail.7.41b32cda2KR1QM
+
+http://mysql.taobao.org/monthly/2018/12/02/
