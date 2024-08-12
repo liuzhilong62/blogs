@@ -378,7 +378,7 @@ ROLLBACK
 
 其实这上面几个函数还是比较好分辨的。抛开几个特殊的函数（上层相关`savepoint`，中层`abort`函数），其实上、中、下三层事务层分成了：*Block（事务块函数），*Command（command函数），*Transaction（真正的事务处理函数）。然后把`savepoint`子事务当做事务块函数（后面会介绍，子事务可以在事务块中回退，所以这里把子事务放在事务块一级理所当然），把`abort`命令当做command级函数就可以了。
 
- ## 事务块状态
+## 事务块状态
 
 上层函数和中层函数同时控制事务块状态，底层函数控制事务状态
 
@@ -1645,7 +1645,7 @@ pg的快照优化性能对比
 
 
 
-## pg中的快照
+# pg中的快照
 
 快照（snapshot）是记录数据库当前瞬时状态的一个数据结构。pg数据库的快照保存当前所有活动事务的最小事务ID、最大事务ID、当前活跃事务列表、当前事务的command id等
 快照数据保存在SnapshotData结构体类型中，源码`src/include/utils/snapshot.h`
@@ -2814,7 +2814,7 @@ typedef struct MultiXactMember
 
 <https://www.highgo.ca/2020/06/12/transactions-in-postgresql-and-their-mechanism/>
 
-#2PC事务
+# 2PC事务
 ## 什么是2PC事务？
 
 事务原子性要求事务必须整体完成或者回滚。在多个联接的数据库等情况下的分布式事务中，必须为事务提供一致性状态，以满足分布式事务的原子性。与其他数据库一样，pg库也提供了 two-phase commit protocol(2PC)两阶段提交协议。
