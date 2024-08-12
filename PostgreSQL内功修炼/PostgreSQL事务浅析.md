@@ -506,7 +506,7 @@ TRANS_PREPARE                /* prepare事务（2pc） */
 src/backend/access/transam/README
 
 
-
+# 事务ID
 
 pg中每个事务都会分配事务ID，事务ID分为虚拟事务ID和持久化事务ID。pg的事务ID非常重要，是理解事务、数据可见性、事务ID回卷等等的重要知识点。
 
