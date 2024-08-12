@@ -145,7 +145,7 @@ OpenAI在2023年3月23日发布的[chatgpt-retrieval-plugin](https://github.com/
 
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/5a8e0cd6789b406abe5208a6e09967f0.png)
 
-上面对pgvector](https://github.com/pgvector/pgvector)的描述不太准确了，pgvector目前已经支持了HNSW，基于pgvector的生态[pgvectorscale](https://github.com/timescale/pgvectorscale)也支持了DiskANN。
+[上面对pgvector](https://github.com/pgvector/pgvector)的描述不太准确了，pgvector目前已经支持了HNSW，基于pgvector的生态[pgvectorscale](https://github.com/timescale/pgvectorscale)也支持了DiskANN。
 
 
 
