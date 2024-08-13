@@ -278,13 +278,21 @@ trigger_file和pg_ctl promote在激活时都是一条命令就可以完成激活
 ### 参考文档：
 《PostgreSQL修炼之道》
 <https://www.postgresql.org/docs/current/warm-standby.html>
+
 <https://www.postgresql.org/docs/13/high-availability.html>
+
 <https://www.postgresql.org/docs/current/runtime-config-replication.html>
+
 <https://www.postgresql.org/docs/13/runtime-config-wal.html>
+
 <https://www.postgresql.org/docs/current/app-pgbasebackup.html>
+
 <https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT>
+
 <https://cloud.tencent.com/developer/article/1555354>
+
 <https://www.modb.pro/db/29737>
+
 <https://wiki.postgresql.org/wiki/Streaming_Replication>
 <https://www.percona.com/blog/2018/09/07/setting-up-streaming-replication-postgresql/>
 <https://www.cybertec-postgresql.com/en/the-synchronous_commit-parameter/>
