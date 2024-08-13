@@ -385,8 +385,7 @@ lzldb=# select * from t2;
 
 [postgres@node2 ~]$sqlplus / as sysdba
 SQL> select * from oralzl.tab1;  
-```
-
 ​     id name         
 ---------- ----------
 ​     1 lzl1          
+```
