@@ -332,7 +332,6 @@ pg的内置逻辑复制基于发布订阅模型。发布与订阅模式不是解
    */
   ```
 
-  ![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
 
   
 
@@ -532,7 +531,6 @@ pg的内置逻辑复制基于发布订阅模型。发布与订阅模式不是解
   --订阅为ready状态，新增表同步完成
   ```
 
-  ![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
 
   
 
@@ -1012,7 +1010,6 @@ sprintf(path, "pg_logical/snapshots/%X-%X.snap",
 fd = OpenTransientFile(path, O_RDONLY | PG_BINARY);
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
 
 逻辑复制槽需要的事物在未提交以前，会将事物脏数据和未消费的数据存放在pg_logical/snapshots/ 下面。在提交数据或启动复制槽后交给reorderbuffer：或者清理复制槽后，数据被释放
 
