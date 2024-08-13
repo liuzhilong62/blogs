@@ -164,10 +164,12 @@ primary_slot_name = 'pg_slot_lzl'
 **max_replication_slots**:复制槽的最大个数，重启生效。如果使用的复制槽不足，从库将启动失败。应将该值设置的较大。在pg9.6版本以下，默认值为0，pg10以上为10。
 
 **创建pg复制槽**
+
 **1.设置主库max_replication_slots参数**
 主库：（我的pg版本为9.6)
 max_replication_slots=10
 加入postgres.conf，并重启主库
+
 **2.创建复制槽**
 创建复制槽：
 ```sql
@@ -275,16 +277,16 @@ trigger_file和pg_ctl promote在激活时都是一条命令就可以完成激活
 
 ### 参考文档：
 《PostgreSQL修炼之道》
-https://www.postgresql.org/docs/current/warm-standby.html
-https://www.postgresql.org/docs/13/high-availability.html
-https://www.postgresql.org/docs/current/runtime-config-replication.html
-https://www.postgresql.org/docs/13/runtime-config-wal.html
-https://www.postgresql.org/docs/current/app-pgbasebackup.html
-https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT
-https://cloud.tencent.com/developer/article/1555354
-https://www.modb.pro/db/29737
-https://wiki.postgresql.org/wiki/Streaming_Replication
-https://www.percona.com/blog/2018/09/07/setting-up-streaming-replication-postgresql/
-https://www.cybertec-postgresql.com/en/the-synchronous_commit-parameter/
-https://blog.csdn.net/m15217321304/article/details/88850146
-https://blog.51cto.com/lishiyan/2460518?source=dra
+<https://www.postgresql.org/docs/current/warm-standby.html>
+<https://www.postgresql.org/docs/13/high-availability.html>
+<https://www.postgresql.org/docs/current/runtime-config-replication.html>
+<https://www.postgresql.org/docs/13/runtime-config-wal.html>
+<https://www.postgresql.org/docs/current/app-pgbasebackup.html>
+<https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT>
+<https://cloud.tencent.com/developer/article/1555354>
+<https://www.modb.pro/db/29737>
+<https://wiki.postgresql.org/wiki/Streaming_Replication>
+<https://www.percona.com/blog/2018/09/07/setting-up-streaming-replication-postgresql/>
+<https://www.cybertec-postgresql.com/en/the-synchronous_commit-parameter/>
+<https://blog.csdn.net/m15217321304/article/details/88850146>
+<https://blog.51cto.com/lishiyan/2460518?source=dra>
