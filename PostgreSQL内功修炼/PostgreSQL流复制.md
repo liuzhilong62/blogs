@@ -26,7 +26,7 @@ pg流复制主要分为2个阶段，实例恢复阶段和主备同步阶段。
 ### 同步和异步
 pg主从有5种模式，由synchronous_commit 参数控制。synchronous_commit 参数的本质就是控制主库什么时候提交。
 **remote_apply**：所有备库上均已应用完WAL时，主库提交。所以这个模式是同步模式，主从是一致的，主库上能查到的数据备库上一定也可以查到，这种模式下主备没有延时，但对主库提交时间有影响，因为主库commit需要等待网络传输和备库应用时间
-*****synchronous_commit的含义分2种情况，有从库和无从库时***（synchronous_standby_name空或非空时**）
+ynchronous_commit的含义分2种情况，有从库和无从库时（synchronous_standby_name空或非空时）
 
 当synchronous_standby_name为非空时：
 **remote_apply**:从库已应用了wal，主库才可以提交。这种模式主从是同步的
@@ -44,6 +44,7 @@ pg主从有5种模式，由synchronous_commit 参数控制。synchronous_commit 
 
  **主从同步关系**
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/blog_migrate/b30151929e5139ad54b4ded3f8ab9226.png)
+
 **主从可靠性**
 ![在这里插入图片描述](https://i-blog.csdnimg.cn/blog_migrate/39393bc9ea5e4fc3ae61e04773eb3e8b.png)
  
@@ -53,56 +54,68 @@ pg主从有5种模式，由synchronous_commit 参数控制。synchronous_commit 
 pg提供了2种方法将备库激活为主库：trigger_file文件和pg_ctl promote命令。(pg 12以后trigger_file变成promote_trigger_file）
 trigger_file和pg_ctl promote在激活时都是一条命令就可以完成激活备库的任务，区别在于trigger_file需要在recover_file提前写好trigger_file配置
 使用trigger_file做主备切换（pg_ctl promote同样的效果，比较简单）：
-1.备库recovery.conf中配置trigger_file
-2.关闭主库
-3.touch trigger_file，将老备库启动为新主库
-4.配置recovery.conf，将老主库启动为新备库
-5.观察新老主备库
+ 1. 备库recovery.conf中配置trigger_file
+ 2. 关闭主库
+ 3. touch trigger_file，将老备库启动为新主库
+ 4. 配置recovery.conf，将老主库启动为新备库
+ 5. 观察新老主备库
 
 **failover示例：**
-*环境：
+环境：
 主库	172.17.100.150	5432
-备库	172.17.100.150	5433*
+备库	172.17.100.150	5433
 
 **1.备库recovery.conf中配置trigger_file**
+```shell
 $ cat recovery.conf|grep trigger
 trigger_file = '/pg/pg96data_sla/trigger.kenyon'
 $ ll /pg/pg96data_sla/trigger.kenyon
 ls: cannot access /pg/pg96data_sla/trigger.kenyon: No such file or directory
+```
 在recovery.conf中配置trigger文件路径就可以了，配置后不会出现trigger文件
 
 备库postgres.conf添加配置
+```shell
 max_wal_senders = 6 #max_wal_senders是sender进程的最大数量，默认是0，所以切换前备库必须配置
 hot_standby=on  #备库打开查询功能
-
+```
 **2.关闭主库**
+```shell
 $ pg_ctl stop -D  /pg/pg96data_pri -m fast
 waiting for server to shut down.... done
 server stopped
-
+```
 (判断主库WAL是否全部被备库应用：pg9.6- cd pg_xlog;pg 10+ cd pg_wal)
+```shell
 ls -ltr|tail -n 1 |awk '{print $NF}'|while read xlog;do pg_xlogdump $xlog;done
-观察备库wal中有关键词shutdown）
+```
+观察备库wal中有关键词shutdown
 
 **3.touch激活备库(或者 pg_ctl promote -D /pg/pg96data_sla**
+```shell
 $ touch /pg/pg96data_sla/trigger.kenyon
+```
 此时recovery.conf变成recovery.done
 
 **4.主库设置为备库**
 配置新备库recovery.conf文件，可以直接cp老备库的过来，修改IP和目录
+```shell
 vi $新备库/recover.conf
 standby_mode = on
 primary_conninfo = 'host=172.17.100.150 port=5433 user=lzl password=lzl'
 recovery_target_timeline = 'latest'
-
+```
 配置postgres.conf，将hot_standby = on写入conf，表示备库开启查询
+```shell
 vi $新备库/postgres.conf
 hot_standby = on
-
+```
 启动新备库
+```shell
 /pg/pg96/bin/pg_ctl -D /pg/pg96data_pri -l /pg/pg96data_pri/server.log start
-
+```
 **5.检查主备库**
+```shell
 postgres=# \x
 Expanded display is on.
 postgres=# select * from  pg_stat_replication ;
@@ -123,15 +136,15 @@ flush_location   | 0/4033790
 replay_location  | 0/4033790
 sync_priority    | 0
 sync_state       | async
-
+```
 
 ### pg_basebackup
 pg_basebackup是pg自带的备份工具，它用来做pg的基础备份。pg_basebackup可以用作PITR，也可以用来构造log-shipping standby和stream standby。它是pg的物理备份工具。
-https://liuzhilong.blog.csdn.net/article/details/119533506
+<https://liuzhilong.blog.csdn.net/article/details/119533506>
 
 ### pg_rewind
 pg_rewind可以用作pg主从的维护工具。当2个pg实例时间线（timeline）出现分叉时，pg_rewind可以做实例间的同步。（比如主库运行的情况下，备库failover后运行了一段时间，此时主备的时间线就出现了分叉）
-https://liuzhilong.blog.csdn.net/article/details/119250794
+<https://liuzhilong.blog.csdn.net/article/details/119250794>
 
 
  ### Replication Slots
@@ -143,7 +156,7 @@ https://liuzhilong.blog.csdn.net/article/details/119250794
 **复制槽参数：**
 **max_slot_wal_keep_size**：在有复制槽时，该参数定义pg_wal目录下wal文件的最大大小。默认值为-1，表示主库为从库保留wal文件的大小没有上限。
 **wal_keep_segments**/**wal_keep_size**:pg12及以下为wal_keep_segments，pg13及以上为wal_keep_size。保证pg_wal下的wal文件不会被删除。在没有复制槽的情况下，wal文件超过该大小就可能被删除，可能导致从库不可追日志。如果调整的过大，可能导致目录被撑的很大。该参数默认为0，也就是不保留WAL文件。如果wal被删除，可能会出现如下报错
-ERROR: requested WAL segment xxxx has already been removed
+`ERROR: requested WAL segment xxxx has already been removed`
 这时从库只能期待有归档，否则只要重搭。
 **primary_slot_name**：设置slot的名字，表示pg主从开启复制槽。所以开启pg复制槽至少有类似下面的配置
 primary_conninfo = 'host=172.17.100.150 port=5433 user=lzl password=lzl'
@@ -157,41 +170,46 @@ max_replication_slots=10
 加入postgres.conf，并重启主库
 **2.创建复制槽**
 创建复制槽：
+```sql
 postgres=# SELECT * FROM pg_create_physical_replication_slot('pg_slot_lzl');
   slot_name  | xlog_position 
 -------------+---------------
- pg_slot_lzl | 
+ pg_slot_lzl |
+```
 查看复制槽
+```sql
 postgres=# SELECT slot_name, slot_type, active FROM pg_replication_slots;
   slot_name  | slot_type | active 
 -------------+-----------+--------
  pg_slot_lzl | physical  | f
-
+```
 **3.设置从库primary_slot_name参数**
-primary_slot_name = 'pg_slot_lzl'
+`primary_slot_name = 'pg_slot_lzl'`
 加入recovery.conf,并重启从库
 
 **4.查看复制槽**
+```sql
 postgres=# select *,pg_xlogfile_name(restart_lsn)as current_xxlog from pg_replication_slots;
   slot_name  | plugin | slot_type | datoid | database | active | active_pid | xmin | catalog_xmin | restart_lsn | confirmed_flush_lsn |      current_xxlog       
 -------------+--------+-----------+--------+----------+--------+------------+------+--------------+-------------+---------------------+--------------------------
  pg_slot_lzl |        | physical  |        |          | t      |      12802 |      |              | 0/A002340   |                     | 00000002000000000000000A
 --pg_xlogfile_name(restart_lsn)查看当前wal日志信息
-
+```
 ### 查询冲突
 **什么是查询冲突？**
 备库在查询时可能会遇到如下错误
-ERROR：canceling statement due to confilct with recovery。
+`ERROR：canceling statement due to confilct with recovery`
+
 为什么会产生冲突呢？我们细想一下，比如说备库正在执行基于某个表的查询（这个查询可能是应用产生的，也可能是手动连接进行的查询），这时主库执行了drop table操作，该操作写入wal日志后传至备库进行应用，为了保证数据一致性，postgresql必然会迅速回放数据，这时drop table和select就会形成冲突。如下图所示：
 ![ddl时查询冲突](https://i-blog.csdnimg.cn/blog_migrate/1e35ee5f93b8a6f2eb9698650f6026a4.png)
 
 
 冲突场景：
 上面只介绍了1种查询冲突的情况。总结一下有以下几种情况
-1.主库排他锁（包括显示LOCK命令和各种DDL）
-2.主库vacuum清理死元组，从库如果正在使用该元组，就会产生冲突
-3.主库删除了从库查询正在使用的表空间
-4.主库删除了从库正在使用的数据库
+ 1. 主库排他锁（包括显示LOCK命令和各种DDL）
+ 2. 主库vacuum清理死元组，从库如果正在使用该元组，就会产生冲突
+ 3. 主库删除了从库查询正在使用的表空间
+ 4. 主库删除了从库正在使用的数据库
 ![vacuum时查询冲突](https://i-blog.csdnimg.cn/blog_migrate/c25568d3b37a62a15f74c4e563567cb5.png)
 
 
@@ -255,7 +273,7 @@ trigger_file和pg_ctl promote在激活时都是一条命令就可以完成激活
 
 
 
-参考文档：
+### 参考文档：
 《PostgreSQL修炼之道》
 https://www.postgresql.org/docs/current/warm-standby.html
 https://www.postgresql.org/docs/13/high-availability.html
