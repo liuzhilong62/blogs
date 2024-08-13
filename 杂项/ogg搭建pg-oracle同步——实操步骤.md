@@ -2,6 +2,7 @@ ogg软件版本:(19.1.0.0.4)
 oracle版本：11.2.0.4
 pg版本：pg10
 ogg下载地址：<https://www.oracle.com/technetwork/middleware/goldengate/downloads/index.html>
+
 glibc问题处理：<https://www.cnblogs.com/hxlasky/p/16779047.html>
 
 
