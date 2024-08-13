@@ -312,7 +312,7 @@ pg的内置逻辑复制基于发布订阅模型。发布与订阅模式不是解
 
 - 订阅还有些属性，比如二进制传输、流传输、同步提交、两阶段提交等
 
-![d48af56aa7fc4df89b429605b2e049a9.png]([https://i-blog.csdnimg.cn/blog_migrate/ea6667c64634ef277bd7a8205d884468.png)![](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==](https://i-blog.csdnimg.cn/blog_migrate/ea6667c64634ef277bd7a8205d884468.png))
+![d48af56aa7fc4df89b429605b2e049a9.png](https://i-blog.csdnimg.cn/blog_migrate/ea6667c64634ef277bd7a8205d884468.png)
 
 - logicalreplication launcher是用来启动订阅端的worker进程的，只在启动时存在
 
@@ -781,7 +781,7 @@ ogg的安装和部署就不介绍了，我也是参照文章的安装步骤一�
 
 同步架构图：
 
-![c8be5aae99704448a8a7e2e01fbde05b.png](https://i-blog.csdnimg.cn/blog_migrate/6b38c8c8b2e2a6976c926bb1169191ee.png)编辑
+![c8be5aae99704448a8a7e2e01fbde05b.png](https://i-blog.csdnimg.cn/blog_migrate/6b38c8c8b2e2a6976c926bb1169191ee.png)
 
 ```sql
 lzldb=# select * from pg_replication_slots where slot_name='ext_pg_5d4b1d39f7494f79';
@@ -933,7 +933,7 @@ reply_time       | 2023-02-28 16:39:44.986625+08
 
 ### sent_lsn、write_lsn、flush_lsn、replay_lsn的关系
 
-![f2a89e2dabf84e0794c1a5854bb2006f.png](https://i-blog.csdnimg.cn/blog_migrate/3e88dc92121c66ec1923698e5221eaac.png)编辑
+![f2a89e2dabf84e0794c1a5854bb2006f.png](https://i-blog.csdnimg.cn/blog_migrate/3e88dc92121c66ec1923698e5221eaac.png)
 
 上面很好的展示了sent_lsn、write_lsn、flush_lsn的层级关系
 
@@ -1204,7 +1204,7 @@ ReorderBufferChangeSize(change));
 
 根据源码解读逻辑解析过程：
 
-![69b422c44d6d43e991eea0c8904e166c.png](https://i-blog.csdnimg.cn/blog_migrate/7142c4d7e59cbcc3996284640cb71d05.png)编辑
+![69b422c44d6d43e991eea0c8904e166c.png](https://i-blog.csdnimg.cn/blog_migrate/7142c4d7e59cbcc3996284640cb71d05.png)
 
 **xtransaction snap保留解析锁需要的元数据，复制槽处于非活动状态或事物未提交，snap仍然进行pg_logical/snapshots/%restart_lsn.snap，复制槽重新启动后或事物提交后，将磁盘上的事物snap元数据读到内存发送给reorderbuffer解析wal，以事物的开始执行顺序排序。如果逻辑解析数据将logical_decoding_work_mem内存区打满，变更条目会将最大的事物持久化到pg_replslot/复制槽名/xid-%u-lsn-%X-%X.spill，将其他的在内存中的事物发送给outputplugin转化输出格式，最后把解码后的信息发送给下游。**
 
