@@ -12,49 +12,51 @@ pg_rewind运行过程中，会对比主（源）备（目标）的差异点，�
 主备切换后，老主库仍然运行，导致主备时间线不一致，老主库无法当做新主库的备库启动
 
 拉起备库时，报时间线错误如下
-
+```shell
 LOG:  entering standby mode
 FATAL:  requested timeline 2 is not a child of this server's history
 DETAIL:  Latest checkpoint is at 0/6000028 on timeline 1, but in the history of the requested timeline, the server forked off from that timeline at 0/4000098.
 LOG:  startup process (PID 22321) exited with exit code 1
 LOG:  aborting startup due to startup process failure
 LOG:  database system is shut down
-
+```
 此时需要用rewind重新拉齐一次主备
 
 
 1.配置当前主库的pg_hba
 配置pg_rewind的登陆用户登陆源库许可，hba生效需要重启数据库
-
+```shell
 vi $source/pg_hba.conf
 host    all       pg         172.17.100.150/32          trust
-
+```
 
 pg_rewind需要使用高权限用户，pg新版本可以授权，pg老版本最好用超级用户。
 我当前环境的版本为pg9.6，直接使用OS超级用户
 
 2.wal_log_hints = on参数配置
 将wal_log_hints = on追加到目标库postgres.conf，重新启动并关闭一次目标库（此时主库是启动状态，备库是关闭状态）
-
+```shell
 vi $dest/postgres.conf
 
 wal_log_hints = on
-
+```
 3.pg_rewind命令执行
+```shell
 [pg@lzl pg96data_sla]$ /pg/pg96/bin/pg_rewind --target-pgdata /pg/pg96data_pri --source-server='host=172.17.100.150 port=5433 user=pg password=oracle  dbname=postgres'
 servers diverged at WAL position 0/4000098 on timeline 1
 rewinding from last common checkpoint at 0/4000028 on timeline 1
 Done!
-
+```
 
 4.配置备库参数
 更改postgres.conf和recovery.conf中的IP、端口、目录等配置，pg_rewind会把配置文件也cp过来
+```shell
 [pg@lzl pg96data_pri]$ mv recovery.done recovery.conf
 [pg@lzl pg96data_pri]$ vi recovery.conf
 [pg@lzl pg96data_pri]$ vi postgres.conf
-
+```
 5.启动备库
-
+```shell
 [pg@lzl pg96data_pri]$  /pg/pg96/bin/pg_ctl -D /pg/pg96data_sla -l /pg/pg96data_sla/server.log start        
 server starting
 [pg@lzl pg96data_sla]$ psql -p5433 postgres
@@ -79,16 +81,17 @@ flush_location   | 0/4033790
 replay_location  | 0/4033790
 sync_priority    | 0
 sync_state       | async
-
+```
 
 # 常见问题
 ## pg_rewind命令报错一
-
+```shell
 could not fetch remote file "global/pg_control": ERROR:  must be superuser to read files
 Failure, exiting
+```
 解决办法：
 使用高权限用户
-
+```shell
 postgres=# \du
                                     List of roles
   Role name  |                         Attributes                         | Member of 
@@ -96,45 +99,47 @@ postgres=# \du
  lzl         | Replication                                                | {}
  pg          | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
  rewind_user |                                                            | {}
-
+```
 
 pg用户是pg server自带的超级用户，跟pg安装用户相同。os的安装用户肯定有修改pg_control的权限
-
+```shell
 /pg/pg96/bin/pg_rewind --target-pgdata /pg/pg96data_pri --source-server='host=172.17.100.150 port=5433 user=pg password=oracle  dbname=postgres'
-pg_rewind命令报错二
+```
+## pg_rewind命令报错二
  
-
+```shell
 could not connect to server: FATAL:  no pg_hba.conf entry for host "172.17.100.150", user "rewind_user", database "postgres"
 Failure, exiting
-
-## 没有配置pg_hba.conf连接
+```
+ 没有配置pg_hba.conf连接
 解决办法：配置用户的pg_hba，例如
-
+```shell
 host    all       pg         172.17.100.150/32          trust
-
+```
 ## pg_rewind命令报错三
  
-
+```shell
 [pg@lzl pg96data_sla]$   /pg/pg96/bin/pg_rewind --target-pgdata /pg/pg96data_pri --source-server='host=172.17.100.150 port=5433 user=pg password=oracle  dbname=postgres'
 
 target server needs to use either data checksums or "wal_log_hints = on"
-
+```
 问题原因：
 1. full_page_writes （默认开启）
 2. wal_log_hints 设置成 on 或者 PG 在初始化时开启 checksums 功能 
 解决办法：将wal_log_hints = on配置到目标库postgres.conf，启动再关闭一次目标库（目标库本来就是关闭的，必须启动再关闭一次，不然参数不会生效）
+```shell
 vi postgres.conf 加入目标库配置
 
 wal_log_hints = on
-
+```
 重启目标库以生效
-
+```shell
 [pg@lzl pg96data_sla]$  /pg/pg96/bin/pg_ctl -D /pg/pg96data_pri -l /pg/pg96data_pri/server.log start      
 server starting
 [pg@lzl pg96data_sla]$  /pg/pg96/bin/pg_ctl -D /pg/pg96data_pri -l /pg/pg96data_pri/server.log stop
 waiting for server to shut down.... done
-
-参考文档：
-https://www.postgresql.org/docs/9.6/app-pgrewind.html
+```
+# 参考文档：
+<https://www.postgresql.org/docs/9.6/app-pgrewind.html>
 
 ​
