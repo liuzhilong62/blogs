@@ -294,7 +294,11 @@ trigger_file和pg_ctl promote在激活时都是一条命令就可以完成激活
 <https://www.modb.pro/db/29737>
 
 <https://wiki.postgresql.org/wiki/Streaming_Replication>
+
 <https://www.percona.com/blog/2018/09/07/setting-up-streaming-replication-postgresql/>
+
 <https://www.cybertec-postgresql.com/en/the-synchronous_commit-parameter/>
+
 <https://blog.csdn.net/m15217321304/article/details/88850146>
+
 <https://blog.51cto.com/lishiyan/2460518?source=dra>
