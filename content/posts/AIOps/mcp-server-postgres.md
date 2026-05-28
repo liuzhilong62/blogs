@@ -25,7 +25,7 @@ Bruce Momjian（PG core team，写了 20 多年发行注记的那位）最近在
 
 理论层占了近一半篇幅，从 LLM 基本原理讲到 MCP 的工作方式。Outline 很清楚：
 
-![演讲大纲：Generative AI → LLM 局限 → RAG → MCP → MCP Server 实战](https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/mcp/outline.png)
+![演讲大纲：Generative AI → LLM 局限 → RAG → MCP → MCP Server 实战](https://lastdba.com/img/mcp/outline.png)
 
 ## RAG vs MCP：一句话说清
 
@@ -41,11 +41,11 @@ Bruce 用一句话总结：
 
 Slide 18-33 是理论层最核心的部分。Bruce 画了一套详细的 Transformer 内部流程图：
 
-![MCP Server 作为 Tool Embedding Vectors 注册到向量空间](https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/mcp/mcp-servers.png)
+![MCP Server 作为 Tool Embedding Vectors 注册到向量空间](https://lastdba.com/img/mcp/mcp-servers.png)
 
 他的逻辑是：把每个 MCP tool 的描述文本（比如 "Return the radiation level (CPM) at 13 Roberts Road..."）用文本嵌入模型向量化，塞进 attention 层的向量空间里。然后在每一步推理时，output vector 去匹配最近似的向量——
 
-![最近似向量可能是文本 token，也可能是 MCP tool](https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/mcp/word-or-mcp.png)
+![最近似向量可能是文本 token，也可能是 MCP tool](https://lastdba.com/img/mcp/word-or-mcp.png)
 
 > "The closest vector might be a word or an MCP."
 
@@ -75,13 +75,13 @@ Bruce 这 15 页 slides 画得很好看，但如果当工程实现去理解，�
 
 Bruce 在自家院子里架了一台 GQ GMC-800 盖革计数器（测辐射的），USB 接树莓派，每 15 分钟测一次环境辐射。先看 ChatGPT 用 MCP 调用真实数据的效果：
 
-![ChatGPT 通过 MCP 查询天气](https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/mcp/chatgpt-weather.png)
+![ChatGPT 通过 MCP 查询天气](https://lastdba.com/img/mcp/chatgpt-weather.png)
 
 MCP 可以调用外部工具获取实时数据——这是 RAG 做不到的。
 
 接上硬件：
 
-![GQ GMC-800 盖革计数器](https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/mcp/geiger-counter.png)
+![GQ GMC-800 盖革计数器](https://lastdba.com/img/mcp/geiger-counter.png)
 
 用 **fastmcp** 写了 Python wrapper：
 
