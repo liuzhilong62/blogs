@@ -1,34 +1,83 @@
 ---
 title: "当 PostgreSQL 成为 AI 的双手——Bruce Momjian 的 MCP Server 实战"
 date: 2026-05-27
+draft: false
 categories: ["PostgreSQL案例"]
 tags: ["PostgreSQL", "MCP", "AI", "Agent"]
-description: "Bruce Momjian 在 PGDay Armenia 2026 演示了用 PostgreSQL 构建 MCP Server，从盖革计数器到椒盐卷饼库存，一文讲清 MCP 比 RAG 强在哪，以及生产落地还差多远。"
+description: "Bruce Momjian 在 PGDay Armenia 的 70 页演讲，从 Transformer 的向量空间到椒盐卷饼库存系统，拆解 MCP 比 RAG 强在哪，以及生产还差多远。"
 ---
 
-同事 Bruce Momjian（PG core team，写了 20 多年发行注记的那位）最近在 PGDay Armenia 2026 做了一个演讲，标题很直白：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)。70 页幻灯片，两个能跑的 demo，看完以后我对 MCP 的认知被刷新了不少。
+同事 Bruce Momjian（PG core team，写了 20 多年发行注记的那位）最近在 PGDay Armenia 2026 做了一个演讲：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)。70 页幻灯片，信息密度极高。
+
+看完最大的感受是：**这 70 页可以清晰地切成两层——前半部分是理论教学，后半部分是实战 demo。两层之间，关系不大。**
+
+![Bruce Momjian 演讲标题页](/img/mcp/title.png)
 
 ---
 
-# RAG 的尽头是什么
+# 理论层：用 Transformer 解释 RAG → MCP 的演进（Slide 1-33）
 
-先厘清一个基本问题：RAG 和 MCP 到底差在哪。
+理论层占了近一半篇幅，从 LLM 基本原理讲到 MCP 的工作方式。Outline 很清楚：
 
-RAG（检索增强生成）的流程大家都很熟了：程序员决定要检索什么数据源，把检索结果拼到 system prompt 里，LLM 读完之后生成回答。这是一种**预编排**——LLM 能看到什么数据，在用户提问之前就已经定好了。
+![演讲大纲：Generative AI → LLM 局限 → RAG → MCP → MCP Server 实战](/img/mcp/outline.png)
 
-MCP（模型上下文协议）不一样。工具的描述直接注册给 LLM，LLM 在生成过程中**自己判断**要不要调工具、调哪个、参数是什么。这是**动态决策**——程序员只管暴露工具，LLM 负责编排。
+## RAG vs MCP：一句话说清
+
+RAG 的流程大家都熟了：程序员决定查什么数据 → 检索结果拼到 system prompt → LLM 读完后生成回答。**预编排**——LLM 能看到什么，在用户提问之前就定好了。
+
+MCP 不一样。工具描述注册给 LLM，LLM 在生成过程中**自己判断**要不要调工具、调哪个。**动态决策**——程序员只负责暴露工具，LLM 负责编排。
 
 Bruce 用一句话总结：
 
-> RAG 只能做 AI 程序员预设的事情。MCP 可以根据输出质量动态调整，可以迭代调用多个工具，还可以触发外部任务。
+> RAG 只能做程序员预设的事。MCP 可以根据输出质量动态调整，可以迭代调用多个工具，还可以触发外部任务。
+
+## "是词还是 MCP"——那套向量嵌入图解
+
+Slide 18-33 是理论层最核心的部分。Bruce 画了一套详细的 Transformer 内部流程图：
+
+![MCP Server 作为 Tool Embedding Vectors 注册到向量空间](/img/mcp/mcp-servers.png)
+
+他的逻辑是：把每个 MCP tool 的描述文本（比如 "Return the radiation level (CPM) at 13 Roberts Road..."）用文本嵌入模型向量化，塞进 attention 层的向量空间里。然后在每一步推理时，output vector 去匹配最近似的向量——
+
+![最近似向量可能是文本 token，也可能是 MCP tool](/img/mcp/word-or-mcp.png)
+
+> "The closest vector might be a word or an MCP."
+
+## 这个模型对吗？
+
+这里值得停一下。Bruce 这 15 页 slides 画得很好看，但如果当工程实现去理解，是有问题的：
+
+**① MCP tool 不需要"嵌入"。** 实际工程中，tool 定义是作为文本直接写在 system prompt 里的。LLM 读到 "你有这些工具：geiger()、get_pretzel_inventory()..."，靠语义理解决定什么时候调。不需要把 tool 描述算成向量，不需要和词向量做余弦距离比较。Bruce 这套教学模型的本质是把"LLM 决策"解释成"向量最近似匹配"，这更像 retrieval 的范式而不是 generation 的范式。
+
+**② Attention 不产出"查最近似"的操作。** `output = Σ(softmax(Q·K) × V)`，产出的是一个加权混合后的上下文向量。没有"在词向量表和 tool 向量表里二选一"这一步。LLM 选工具的实际机制是 attention 产出 hidden state → LM head → softmax over 词表 → 输出 tool call JSON。从来没有在"词和 tool 之间二选一"，只有在整个词表上做 softmax。
+
+**③ system prompt 和 user prompt 在 attention 里没有边界。** Token 序列就是 token 序列，attention block 对所有 token 一视同仁做 Q·K 点积。不存在"system 区"和"user 区"。
+
+所以这 33 页理论层，可以看作 Bruce 给非 AI 背景的 DBA 做的一个教学简化模型——好看、好懂，但别当架构图用。MCP 真正革命性的地方在**协议标准化**（统一的 tool 注册/发现/调用规范），不在向量化的 trick。
 
 ---
 
-# Demo 1：把盖革计数器接进 ChatGPT
+# 实践层：两个能跑的 demo（Slide 34-69）
 
-第一个 demo 非常硬核——Bruce 在自家院子里架了一台 GQ GMC-800 盖革计数器，USB 接树莓派，每 15 分钟测一次环境辐射。
+从 Slide 34 开始，风格突变——全是代码、终端输出、硬件照片。理论层那套 Transformer 向量模型完全消失了，取而代之的是 `curl`、`psql`、Perl 脚本。
 
-MCP Server 的核心代码就几行：
+**两层之间的唯一联系是"它们都在讲 MCP"，但理论层画的向量匹配机制和实战中的实现方式几乎是两套逻辑。** 这可能正是 Bruce 演讲的张力所在——理论层让你理解 MCP 为什么比 RAG 强，实践层告诉你现在怎么落地。
+
+## Demo 1：让 ChatGPT 读取真实世界的盖革计数器
+
+Bruce 在自家院子里架了一台 GQ GMC-800 盖革计数器，USB 接树莓派，每 15 分钟测一次环境辐射。先看 ChatGPT 用 MCP 调用真实数据的效果：
+
+![ChatGPT 通过 MCP 查询天气](/img/mcp/chatgpt-weather.png)
+
+MCP 可以调用外部工具获取实时数据——这是 RAG 做不到的。
+
+接上硬件：
+
+![GQ GMC-800 盖革计数器](/img/mcp/geiger-counter.png)
+
+用 fastmcp 写了 Python wrapper：
+
+![Geiger 计数器的 Perl 读取脚本](/img/mcp/geiger-script.png)
 
 ```python
 from fastmcp import FastMCP
@@ -43,43 +92,40 @@ def geiger() -> int:
     )
 ```
 
-底层是一个 Perl 脚本往串口发 `<GETCPM>>` 指令，读回 4 字节的 CPM 值。MCP Server 通过 Apache 反代暴露到 443 端口（因为 OpenAI 只跟 443 通信），注册到 ChatGPT 之后：
+底层是一个 Perl 脚本，往串口发 `<GETCPM>>` 指令，读回 4 字节 CPM 值。Apache 做 443 端口反代（OpenAI 只跟 443 通信），注册到 ChatGPT 后：
 
 ```
 User: 13 Roberts Road 的辐射水平是多少？
-GPT:  我没有这个位置的公开实时辐射数据……
+GPT:  我没有这个位置的公开数据……
 
 User: 用我的 custom app
-GPT:  [调用 geiger tool] → 14 CPM
-      正常环境背景辐射（5-25 CPM），安全。
+GPT:  [调用 geiger tool] → 14 CPM。正常环境背景辐射（5-25 CPM）。
 
 User: 测五次，给我平均值
-GPT:  [调用 ×5] 15 16 13 15 15
-      平均值：14.8 CPM
+GPT:  [调用 ×5] 15 16 13 15 15 → 平均 14.8 CPM
 ```
 
-两个值得关注的点：
+两个关键行为：
 
-**一是 LLM 可以迭代调工具做计算**。RAG 是一次性塞数据，MCP 是"调 → 拿结果 → 判断要不要再调 → 调 → 算"。这已经是 agentic AI 的雏形了。
+1. **LLM 可以迭代调工具做计算**——RAG 是一次性塞数据，MCP 是"调 → 拿结果 → 判断 → 再调 → 算"
+2. **用户必须显式授权**——第一次问的时候 ChatGPT 没说"我有你的盖革计数器数据"，直到说 "use my custom app" 才触发 tool call。安全模型很保守
 
-**二是用户必须显式授权**。Bruce 第一次问的时候 ChatGPT 直接说"我没有这个数据"，直到他说"use my custom app"才触发 tool call。当前的安全模型很保守——工具不会自动执行，需要用户明确指令。
+## Demo 2：用 PG 做椒盐卷饼店的库存系统
 
----
+从硬件回到软件。建一个椒盐卷饼（pretzel）库存库：
 
-# Demo 2：PostgreSQL 当椒盐卷饼店的库存系统
-
-第二个 demo 从硬件回到了软件——用 PG 做 MCP 后端，模拟一个椒盐卷饼（pretzel）店的库存管理。
-
-建表：
+![Pretzel 数据库 schema](/img/mcp/pretzel-schema.png)
 
 ```sql
 CREATE TABLE pretzel (
     quantity INTEGER CHECK (quantity >= 0)
 );
-INSERT INTO pretzel VALUES (0);  -- 初始库存为 0
+INSERT INTO pretzel VALUES (0);  -- 初始库存 0
 ```
 
-三个 MCP tool，全部直接用 `psql` 操作 PG：
+MCP tool 直接用 `psql` 操作 PG：
+
+![Pretzel MCP Python 脚本](/img/mcp/pretzel-python.png)
 
 ```python
 @mcp.tool
@@ -107,73 +153,55 @@ def baked_6_pretzels() -> str:
     )
 ```
 
-然后就是一段流畅的自然语言交互：
+交互流程：
 
 ```
 User: How many pretzels available?
-GPT:  → 0 pretzels. Time to bake!
+GPT:  0 pretzels.
 
-User: I just baked a tray
-GPT:  → 6 pretzels in inventory
+User: I just baked a tray        → 6 pretzels
+User: I sold two                 → 4 remaining
+User: I sold four                → 0 remaining
 
-User: I sold two
-GPT:  → 4 remaining
-
-User: I sold four
-GPT:  → 0 remaining. Time to bake again!
-
-User: I sold one pretzel
-GPT:  → ERROR: CHECK constraint 阻止了 quantity 变负数
-      → 库存不足，系统拒绝了这次操作
+User: I sold one pretzel         → ERROR! CHECK constraint 阻止了 quantity 变负数
 ```
 
-**这个 demo 的核心洞察**：LLM 不直接写 SQL，而是调用你预先定义好的受控接口。函数名和描述就足以让 LLM 理解"什么时候该调哪个"。
+![库存为 0 时卖出触发 CHECK 约束报错](/img/mcp/pretzel-error.png)
 
-但也暴露了一个问题：LLM 忠实执行了 `sold_one_pretzel`，但它不会预判"库存已经是 0，调了会报错"。MCP 是执行层，不是推理层。
+**核心洞察**：LLM 不直接写 SQL，而是调你预先定义的受控接口。PG 的 CHECK 约束天然构成了一个安全兜底——即使 LLM 被诱导调了不该调的函数，数据库层的约束还能挡一道。
 
----
-
-# 那张 Transformer 图的问题
-
-Bruce 在 slides 18-33 画了一套详细的 Transformer 内部流程图来解释 MCP 的工作原理：tool 描述向量化之后塞进 attention 层，和词向量放在同一个空间里，每一步的 output vector 去"找最近似的是词还是 tool"。
-
-这个模型作为教学直觉是好的，但作为实现描述是有问题的。
-
-几个点：
-
-**system 和 user 没有边界**。Token 序列就是 token 序列，attention block 对 system prompt 的 token 和 user prompt 的 token 一视同仁做 Q·K 点积。没有什么"system 区"和"user 区"。
-
-**attention 产出的是加权混合向量，不是去查最近似的查找操作**。`output = Σ(softmax(Q·K) × V)`，没有"找 cosine 距离最近"这一步。那套流程更像 retrieval 的范式，不是 generation 的范式。
-
-**LLM 选工具的实际机制**是 attention 产出的 hidden state → LM head → softmax over 词表 → 输出 token。`{"name": "get_weather", "arguments": {...}}` 就是 model 学会了在某些上下文中生成这个 JSON token 序列。从来没有"在词和 tool 之间二选一"，只有"在整个词表上做 softmax"。
-
-MCP 真正厉害的地方不在向量化的 trick，而在**协议标准化**——一套统一的 tool 注册、发现、调用、返回格式，让任何 LLM 客户端都能对接任何 MCP Server。这才是它比 RAG 革命性的地方。
+但也暴露了问题：LLM 忠实执行了 `sold_one_pretzel`，但不会预判"库存已经是 0 了调了会报错"。**MCP 是执行层，不是推理层。**
 
 ---
 
-# 生产落地还差多远
+# 生产还差多远
 
-Bruce 在最后一页坦承了当前实现的局限：
+最后一页是坦诚的：
+
+![What's Missing：认证、参数化、动态 SQL 安全](/img/mcp/whats-missing.png)
 
 - **没有认证**——谁都可以调你的 MCP Server
 - **没有参数化**——三个 tool 都是无参函数，现实中的 tool 需要传参数
-- **动态 SQL 安全性**——工具描述里声明"减库存"，但 LLM 可能被注入恶意指令
-- **只调了 psql 命令行**——频率、连接池、事务管理都没考虑
+- **动态 SQL 没做安全限制**——工具描述声明了语义，但 LLM 可能被注入恶意内容
+- **连接池、事务管理、频率限制**——一概没考虑
 
-他引用了两篇值得读的文章：[pgedge.com 的 MCP Server 踩坑记](https://www.pgedge.com/blog/lessons-learned-writing-an-mcp-server-for-postgresql) 和 CardinalOps 的[安全分析](https://cardinalops.com/blog/mcp-defaults-hidden-dangers-of-remote-deployment/)，都是生产实践的一手经验。
-
----
-
-# 总结
-
-两个 demo 的价值不在于能不能直接上生产，而在于**展示了边界在哪**：
-
-1. MCP 的本质是让 LLM 在生成过程中动态调用外部工具，比 RAG 的静态检索灵活得多
-2. PG 作为 MCP 后端是天然的——它的 SQL 接口和 CHECK 约束构成了一个自带安全兜底的执行层
-3. 但 MCP Server 的认证、注入、事务管理目前完全靠开发者自己，距离"开箱即用的 PG MCP Server"还很远
-
-一个细节：Bruce 演讲里 MCP Server 的代码都是 `/var/lib/postgresql/` 路径，MCP 数据库的用户也叫 `mcp`。这暗示了一个可能的演进方向——PostgreSQL 官方未来会不会内置一个 MCP Server 能力？毕竟 PG 的 extension 框架天然适合这种扩展。
+两篇值得读的实践经验：
+- [pgedge.com: Lessons Learned Writing an MCP Server for PostgreSQL](https://www.pgedge.com/blog/lessons-learned-writing-an-mcp-server-for-postgresql)
+- [CardinalOps: MCP Defaults — Hidden Dangers of Remote Deployment](https://cardinalops.com/blog/mcp-defaults-hidden-dangers-of-remote-deployment/)
 
 ---
 
-> 原文：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)，Bruce Momjian，PGDay Armenia 2026。
+# 两层之间
+
+回头看这 70 页幻灯片，最有趣的不是任何一个 demo，而是**两层之间的张力**：
+
+1. 理论层用 Transformer 向量空间解释"LLM 如何在词和工具之间做选择"——这是教学模型
+2. 实践层用 `psql`、`curl`、Perl 脚本去落地——这是工程实现
+
+而真正的 MCP 机制——tool 定义当文本塞 system prompt、LLM 靠语义理解决定调哪个、输出 tool call JSON——**不需要理论层那套向量嵌入模型**。两层之间，Bruce 没有画出来连接线。
+
+这可能不是 bug，是 feature。Bruce 的听众是 PGDay 的 DBA 群体，理论层给了他们一个可以理解的直觉模型（"哦，原来工具描述和词一样被向量化了"），实践层给了他们可以照着写的代码（"哦，原来 fastmcp + psql 就行了"）。对非 AI 背景的技术人来说，这套讲法比"LLM 在 attention 和 LM head 之间产生 tool call token 的概率分布"友好太多了。
+
+---
+
+> 原文：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)，Bruce Momjian，PGDay Armenia 2026，CC BY 4.0。
