@@ -11,8 +11,6 @@ description: "Bruce Momjian 在 PGDay Armenia 的 70 页演讲，从 Transformer
 
 这 70 页可以清晰地切成两层——前半部分是理论教学，后半部分是实战 demo。两层之间，关系不大。
 
-![Bruce Momjian 演讲标题页](../../../static/img/mcp/title.png)
-
 ---
 
 # 理论层：用 Transformer 解释 RAG → MCP 的演进（Slide 1-33）
@@ -77,8 +75,6 @@ MCP 可以调用外部工具获取实时数据——这是 RAG 做不到的。
 
 用 fastmcp 写了 Python wrapper：
 
-![Geiger 计数器的 Perl 读取脚本](../../../static/img/mcp/geiger-script.png)
-
 ```python
 from fastmcp import FastMCP
 
@@ -114,8 +110,6 @@ GPT:  [调用 ×5] 15 16 13 15 15 → 平均 14.8 CPM
 
 从硬件回到软件。建一个椒盐卷饼（pretzel）库存库：
 
-![Pretzel 数据库 schema](../../../static/img/mcp/pretzel-schema.png)
-
 ```sql
 CREATE TABLE pretzel (
     quantity INTEGER CHECK (quantity >= 0)
@@ -124,8 +118,6 @@ INSERT INTO pretzel VALUES (0);  -- 初始库存 0
 ```
 
 MCP tool 直接用 `psql` 操作 PG：
-
-![Pretzel MCP Python 脚本](../../../static/img/mcp/pretzel-python.png)
 
 ```python
 @mcp.tool
@@ -166,8 +158,6 @@ User: I sold four                → 0 remaining
 User: I sold one pretzel         → ERROR! CHECK constraint 阻止了 quantity 变负数
 ```
 
-![库存为 0 时卖出触发 CHECK 约束报错](../../../static/img/mcp/pretzel-error.png)
-
 **核心洞察**：LLM 不直接写 SQL，而是调你预先定义的受控接口。PG 的 CHECK 约束天然构成了一个安全兜底——即使 LLM 被诱导调了不该调的函数，数据库层的约束还能挡一道。
 
 但也暴露了问题：LLM 忠实执行了 `sold_one_pretzel`，但不会预判"库存已经是 0 了调了会报错"。**MCP 是执行层，不是推理层。**
@@ -176,9 +166,7 @@ User: I sold one pretzel         → ERROR! CHECK constraint 阻止了 quantity 
 
 # 生产还差多远
 
-最后一页是坦诚的：
-
-![What's Missing：认证、参数化、动态 SQL 安全](../../../static/img/mcp/whats-missing.png)
+Bruce 在最后一页坦承了当前实现的局限：
 
 - **没有认证**——谁都可以调你的 MCP Server
 - **没有参数化**——三个 tool 都是无参函数，现实中的 tool 需要传参数
