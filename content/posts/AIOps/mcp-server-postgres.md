@@ -2,7 +2,7 @@
 title: "当 PostgreSQL 成为 AI 的双手——Bruce Momjian 的 MCP Server 实战"
 date: 2026-05-27
 draft: false
-categories: ["PostgreSQL案例"]
+categories: ["AIOps"]
 tags: ["PostgreSQL", "MCP", "AI", "Agent"]
 description: "Bruce Momjian 在 PGDay Armenia 的 70 页演讲，从 Transformer 的向量空间到椒盐卷饼库存系统，拆解 MCP 比 RAG 强在哪，以及生产还差多远。"
 ---
