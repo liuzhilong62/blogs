@@ -7,11 +7,11 @@ tags: ["PostgreSQL", "MCP", "AI", "Agent"]
 description: "Bruce Momjian 在 PGDay Armenia 的 70 页演讲，从 Transformer 的向量空间到椒盐卷饼库存系统，拆解 MCP 比 RAG 强在哪，以及生产还差多远。"
 ---
 
-同事 Bruce Momjian（PG core team，写了 20 多年发行注记的那位）最近在 PGDay Armenia 2026 做了一个演讲：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)。70 页幻灯片，信息密度极高。
+同事 Bruce Momjian（PG core team，写了 20 多年发行注记的那位）最近在 PGDay Armenia 2026 做了一个演讲：[Building an MCP Server Using Postgres](https://momjian.us/main/writings/pgsql/mcp.pdf)。70 页幻灯片，信息密度极高。有理论有实践，是一个不错的借鉴。
 
-看完最大的感受是：**这 70 页可以清晰地切成两层——前半部分是理论教学，后半部分是实战 demo。两层之间，关系不大。**
+这 70 页可以清晰地切成两层——前半部分是理论教学，后半部分是实战 demo。两层之间，关系不大。
 
-![Bruce Momjian 演讲标题页](/img/mcp/title.png)
+![Bruce Momjian 演讲标题页](../../../static/img/mcp/title.png)
 
 ---
 
@@ -19,7 +19,7 @@ description: "Bruce Momjian 在 PGDay Armenia 的 70 页演讲，从 Transformer
 
 理论层占了近一半篇幅，从 LLM 基本原理讲到 MCP 的工作方式。Outline 很清楚：
 
-![演讲大纲：Generative AI → LLM 局限 → RAG → MCP → MCP Server 实战](/img/mcp/outline.png)
+![演讲大纲：Generative AI → LLM 局限 → RAG → MCP → MCP Server 实战](../../../static/img/mcp/outline.png)
 
 ## RAG vs MCP：一句话说清
 
@@ -35,11 +35,11 @@ Bruce 用一句话总结：
 
 Slide 18-33 是理论层最核心的部分。Bruce 画了一套详细的 Transformer 内部流程图：
 
-![MCP Server 作为 Tool Embedding Vectors 注册到向量空间](/img/mcp/mcp-servers.png)
+![MCP Server 作为 Tool Embedding Vectors 注册到向量空间](../../../static/img/mcp/mcp-servers.png)
 
 他的逻辑是：把每个 MCP tool 的描述文本（比如 "Return the radiation level (CPM) at 13 Roberts Road..."）用文本嵌入模型向量化，塞进 attention 层的向量空间里。然后在每一步推理时，output vector 去匹配最近似的向量——
 
-![最近似向量可能是文本 token，也可能是 MCP tool](/img/mcp/word-or-mcp.png)
+![最近似向量可能是文本 token，也可能是 MCP tool](../../../static/img/mcp/word-or-mcp.png)
 
 > "The closest vector might be a word or an MCP."
 
@@ -67,17 +67,17 @@ Slide 18-33 是理论层最核心的部分。Bruce 画了一套详细的 Transfo
 
 Bruce 在自家院子里架了一台 GQ GMC-800 盖革计数器，USB 接树莓派，每 15 分钟测一次环境辐射。先看 ChatGPT 用 MCP 调用真实数据的效果：
 
-![ChatGPT 通过 MCP 查询天气](/img/mcp/chatgpt-weather.png)
+![ChatGPT 通过 MCP 查询天气](../../../static/img/mcp/chatgpt-weather.png)
 
 MCP 可以调用外部工具获取实时数据——这是 RAG 做不到的。
 
 接上硬件：
 
-![GQ GMC-800 盖革计数器](/img/mcp/geiger-counter.png)
+![GQ GMC-800 盖革计数器](../../../static/img/mcp/geiger-counter.png)
 
 用 fastmcp 写了 Python wrapper：
 
-![Geiger 计数器的 Perl 读取脚本](/img/mcp/geiger-script.png)
+![Geiger 计数器的 Perl 读取脚本](../../../static/img/mcp/geiger-script.png)
 
 ```python
 from fastmcp import FastMCP
@@ -114,7 +114,7 @@ GPT:  [调用 ×5] 15 16 13 15 15 → 平均 14.8 CPM
 
 从硬件回到软件。建一个椒盐卷饼（pretzel）库存库：
 
-![Pretzel 数据库 schema](/img/mcp/pretzel-schema.png)
+![Pretzel 数据库 schema](../../../static/img/mcp/pretzel-schema.png)
 
 ```sql
 CREATE TABLE pretzel (
@@ -125,7 +125,7 @@ INSERT INTO pretzel VALUES (0);  -- 初始库存 0
 
 MCP tool 直接用 `psql` 操作 PG：
 
-![Pretzel MCP Python 脚本](/img/mcp/pretzel-python.png)
+![Pretzel MCP Python 脚本](../../../static/img/mcp/pretzel-python.png)
 
 ```python
 @mcp.tool
@@ -166,7 +166,7 @@ User: I sold four                → 0 remaining
 User: I sold one pretzel         → ERROR! CHECK constraint 阻止了 quantity 变负数
 ```
 
-![库存为 0 时卖出触发 CHECK 约束报错](/img/mcp/pretzel-error.png)
+![库存为 0 时卖出触发 CHECK 约束报错](../../../static/img/mcp/pretzel-error.png)
 
 **核心洞察**：LLM 不直接写 SQL，而是调你预先定义的受控接口。PG 的 CHECK 约束天然构成了一个安全兜底——即使 LLM 被诱导调了不该调的函数，数据库层的约束还能挡一道。
 
@@ -178,7 +178,7 @@ User: I sold one pretzel         → ERROR! CHECK constraint 阻止了 quantity 
 
 最后一页是坦诚的：
 
-![What's Missing：认证、参数化、动态 SQL 安全](/img/mcp/whats-missing.png)
+![What's Missing：认证、参数化、动态 SQL 安全](../../../static/img/mcp/whats-missing.png)
 
 - **没有认证**——谁都可以调你的 MCP Server
 - **没有参数化**——三个 tool 都是无参函数，现实中的 tool 需要传参数
