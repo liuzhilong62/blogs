@@ -2,7 +2,7 @@
 title: "UUIDv4和v7两篇精彩文章-碰撞和性能"
 date: 2026-05-29
 draft: false
-categories: ["PostgreSQL案例"]
+categories: ["PostgreSQL内功修炼"]
 tags: ["PostgreSQL", "UUID", "性能", "索引"]
 description: "HackerNews 上一个 UUID v4 真实碰撞事故炸出了 479 赞 347 条评论，结合 UUID v4 vs v7 在 PG 16 的性能基准测试，聊清楚该怎么选。"
 ---
