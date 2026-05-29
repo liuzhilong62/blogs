@@ -8,20 +8,17 @@ description: "HackerNews 上一个 UUID v4 真实碰撞事故炸出了 479 赞 3
 ---
 
 
-
-## 太长不看
+# 太长不看
 
 UUID v4 碰撞了——HackerNews 上有人真的撞了。原因是软件栈的 bug，不是数学。v4 和 v7 在碰撞安全性上没本质区别，差异在索引性能：v7 有时序，B-tree 更紧凑，写入快 35%、索引小 22%。你的 UUID v4 大概率没事，但如果你追求索引性能，换 v7 有实惠。
 
 > 素材来源：[HN UUID v4 碰撞帖](https://news.ycombinator.com/item?id=48060054)、[dev.to UUID Benchmark](https://dev.to/umangsinha12/postgresql-uuid-performance-benchmarking-random-v4-and-time-based-v7-uuids-n9b)
 
 
-
 > AI率99%
 
 
-
-# 问题现象
+# UUID v4 碰撞事故
 
 HackerNews 上有个帖子火了——[Ask HN: We just had an actual UUID v4 collision...](https://news.ycombinator.com/item?id=48060054)，479 赞 347 评论。
 
@@ -38,10 +35,6 @@ b6133fd6-70fe-4fe3-bed6-8ca8fc9386cd
 UUID v4 碰撞的概率是多少？122 位随机位，2^122 ≈ 5.3×10^36 种可能，15,000 条记录下碰撞概率约 2×10^-29。理论上"不可能"。
 
 但它发生了。
-
-# 问题分析
-
-帖子下面的评论炸出了几个真实原因。
 
 ## 原因一：熵源不可靠
 
@@ -83,7 +76,7 @@ v4 和 v7 在碰撞安全性上没有本质区别，差异在前 48 位——v4 
 
 选 v4 还是 v7，真正该看的不是碰撞，是**索引性能**。
 
-# 测试验证：UUID v4 vs v7 在 PG 16 中的性能对比
+# UUID v7 在 PG 16 中的性能对比
 
 UUID v7 比 v4 在 PostgreSQL 里有一个实打实的优势：**时序聚簇，B-tree 更友好**。v4 膨胀 v7 也能膨胀，区别只是 v7 的前 48 位有时序，insert 集中在 B-tree 右侧，页分裂少。
 
@@ -118,7 +111,6 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 ![UUID v4 bit structure](../../../static/img/uuid-v4-structure.png)
 
 ![UUID v7 bit structure](../../../static/img/uuid-v7-structure.png)
-
 
 
 UUID v4 是完全随机的。新插入的 UUID 在 B-tree 索引里随机分布，导致大量页分裂（page split），索引碎片化严重。UUID v7 前 48 位是毫秒级时间戳，新生成的 UUID 天然有序——写入集中在 B-tree 的右侧，页分裂大幅减少，索引更紧凑。
