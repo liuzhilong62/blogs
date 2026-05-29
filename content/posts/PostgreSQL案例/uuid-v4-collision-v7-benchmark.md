@@ -7,15 +7,14 @@ tags: ["PostgreSQL", "UUID", "性能", "索引"]
 description: "HackerNews 上一个 UUID v4 真实碰撞事故炸出了 479 赞 347 条评论，结合 UUID v4 vs v7 在 PG 16 的性能基准测试，聊清楚该怎么选。"
 ---
 
-
-# 太长不看
-
-UUID v4 碰撞了——HackerNews 上有人真的撞了。原因是软件栈的 bug，不是数学。v4 和 v7 在碰撞安全性上没本质区别，差异在索引性能：v7 有时序，B-tree 更紧凑，写入快 35%、索引小 22%。你的 UUID v4 大概率没事，但如果你追求索引性能，换 v7 有实惠。
-
 > 素材来源：[HN UUID v4 碰撞帖](https://news.ycombinator.com/item?id=48060054)、[dev.to UUID Benchmark](https://dev.to/umangsinha12/postgresql-uuid-performance-benchmarking-random-v4-and-time-based-v7-uuids-n9b)
 
 
 > AI率99%
+
+# 太长不看
+
+UUID v4 碰撞了——HackerNews 上有人真的撞了。原因是软件栈的 bug，不是数学。v4 和 v7 在碰撞安全性上没本质区别，差异在索引性能：v7 有时序，B-tree 更紧凑，写入快 35%、索引小 22%。你的 UUID v4 大概率没事，但如果你追求索引性能，换 v7 有实惠。
 
 
 # UUID v4 碰撞事故
