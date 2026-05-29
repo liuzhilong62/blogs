@@ -12,12 +12,12 @@ description: "HackerNews 上一个 UUID v4 真实碰撞事故炸出了 479 赞 3
 
 > AI率99%
 
-# 太长不看
+## 太长不看
 
 UUID v4 碰撞了——HackerNews 上有人真的撞了。原因是软件栈的 bug，不是数学。v4 和 v7 在碰撞安全性上没本质区别，差异在索引性能：v7 有时序，B-tree 更紧凑，写入快 35%、索引小 22%。你的 UUID v4 大概率没事，但如果你追求索引性能，换 v7 有实惠。
 
 
-# UUID v4 碰撞事故
+## UUID v4 碰撞事故
 
 HackerNews 上有个帖子火了——[Ask HN: We just had an actual UUID v4 collision...](https://news.ycombinator.com/item?id=48060054)，479 赞 347 评论。
 
@@ -35,7 +35,7 @@ UUID v4 碰撞的概率是多少？122 位随机位，2^122 ≈ 5.3×10^36 种�
 
 但它发生了。
 
-## 原因一：熵源不可靠
+### 原因一：熵源不可靠
 
 HN 最高赞评论（jandrewrogers）：
 
@@ -43,7 +43,7 @@ HN 最高赞评论（jandrewrogers）：
 
 UUID v4 在高可靠系统中被**明确禁止**，原因是无法验证熵源质量。
 
-## 原因二：npm uuid 包有已知 bug
+### 原因二：npm uuid 包有已知 bug
 
 uuid npm 包的 README 自己都在警告：
 
@@ -55,17 +55,17 @@ uuid npm 包的 README 自己都在警告：
 
 社区建议：用 Node.js 内置的 `crypto.randomUUID()`，别用 npm uuid 包。
 
-## 原因三：Linux 内核 /dev/random 竞态
+### 原因三：Linux 内核 /dev/random 竞态
 
 另一个评论：
 
 > 我在分布式系统的浸泡测试里碰到了 dup UUID。排查很久发现是 Linux 内核的一个竞态 bug——多处理器系统上，两个进程同时读 /dev/random，极低概率（~百万分之一）拿到相同的字节。
 
-## 原因四：Go 的 UUID 库不检查返回值
+### 原因四：Go 的 UUID 库不检查返回值
 
 > 早期 Go UUID 库调用随机数函数时，不检查返回值长度。"请求 N 字节，返回了 3 字节"的情况在大部分硬件上不出现，所以没人检查，直到上生产环境撞了成千上万个重复 UUID。
 
-## 原因五：AMD CPU RNG 的历史缺陷
+### 原因五：AMD CPU RNG 的历史缺陷
 
 AMD 某些 CPU 的内置随机数生成器曾经有问题。VM 环境还会"虚拟化掉"熵——虚拟机的时间源和熵源都可能退化。
 
@@ -75,13 +75,13 @@ v4 和 v7 在碰撞安全性上没有本质区别，差异在前 48 位——v4 
 
 选 v4 还是 v7，真正该看的不是碰撞，是**索引性能**。
 
-# UUID v7 在 PG 16 中的性能对比
+## UUID v7 在 PG 16 中的性能对比
 
 UUID v7 比 v4 在 PostgreSQL 里有一个实打实的优势：**时序聚簇，B-tree 更友好**。v4 膨胀 v7 也能膨胀，区别只是 v7 的前 48 位有时序，insert 集中在 B-tree 右侧，页分裂少。
 
 [Umang Sinha 的 benchmark](https://dev.to/umangsinha12/postgresql-uuid-performance-benchmarking-random-v4-and-time-based-v7-uuids-n9b) 在 PG 16 Docker 容器（8 核 16GB NVMe）上做了严格的对比测试。
 
-## 测试条件
+### 测试条件
 
 ```sql
 CREATE TABLE uuid_v4_test (id UUID PRIMARY KEY, payload TEXT);
@@ -95,7 +95,7 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 | 客户端 | Go + pq 驱动 |
 | UUID 预生成 | 在内存中生成好，不计时 |
 
-## 性能结果
+### 性能结果
 
 | 指标 | UUID v4 | UUID v7 | 提升 |
 |------|---------|---------|------|
@@ -105,7 +105,7 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 | 单点查询 | 0.167 ms | 0.038 ms | **4.4 倍** |
 | 范围扫描 | 8.283 ms | 3.791 ms | **2.2 倍** |
 
-## 为什么差这么多
+### 为什么差这么多
 
 ![UUID v4 bit structure](../../../static/img/uuid-v4-structure.png)
 
@@ -116,7 +116,7 @@ UUID v4 是完全随机的。新插入的 UUID 在 B-tree 索引里随机分布�
 
 索引小 22% 不是魔法，是**减少了碎片**。单点查询快 4 倍也不奇怪——B-tree 层级更少、缓存命中率更高。
 
-# 总结
+## 总结
 
 UUID v4 和 v7 在碰撞安全性上是一样的——都依赖熵源质量，一个用随机数填充前 48 位，一个用时间戳。碰撞是极少数人在特定环境下踩到的坑，你的环境大概率没事，这个基本判断不用变。
 
