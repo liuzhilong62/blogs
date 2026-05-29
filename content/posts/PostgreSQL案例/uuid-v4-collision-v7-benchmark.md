@@ -103,6 +103,12 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 
 ## 为什么差这么多
 
+![Bit-level structure of UUIDv4. Only the version and variant bits are fixed; the rest is pure randomness. ](https://lastdba.com/img/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fmj3xmy9ge19ocis99in5.png)
+
+![Bit-level structure of UUIDv7. The high bits represent time; the rest remains random to avoid collisions.](https://lastdba.com/img/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fomevln1exnptztpbex1y.png)
+
+
+
 UUID v4 是完全随机的。新插入的 UUID 在 B-tree 索引里随机分布，导致大量页分裂（page split），索引碎片化严重。UUID v7 前 48 位是毫秒级时间戳，新生成的 UUID 天然有序——写入集中在 B-tree 的右侧，页分裂大幅减少，索引更紧凑。
 
 索引小 22% 不是魔法，是**减少了碎片**。单点查询快 4 倍也不奇怪——B-tree 层级更少、缓存命中率更高。
