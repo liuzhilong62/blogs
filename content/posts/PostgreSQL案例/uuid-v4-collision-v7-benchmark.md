@@ -103,9 +103,9 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 
 ## 为什么差这么多
 
-![Bit-level structure of UUIDv4. Only the version and variant bits are fixed; the rest is pure randomness. ](https://lastdba.com/img/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fmj3xmy9ge19ocis99in5.png)
+![UUID v4 bit structure](../../../static/img/uuid-v4-structure.png)
 
-![Bit-level structure of UUIDv7. The high bits represent time; the rest remains random to avoid collisions.](https://lastdba.com/img/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fomevln1exnptztpbex1y.png)
+![UUID v7 bit structure](../../../static/img/uuid-v7-structure.png)
 
 
 
