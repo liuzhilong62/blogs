@@ -1,25 +1,27 @@
 ---
-title: "PostgreSQL事务浅析"
+title: "PostgreSQL Transactions Deep Dive"
 date: 2024-08-12
 categories: [PostgreSQL内功修炼]
-description: "深入剖析PostgreSQL事务机制与MVCC实现原理，包括隔离级别、行级锁及无undo的多版本并发控制。"
+description: "An in-depth exploration of PostgreSQL transaction mechanisms and MVCC implementation, covering isolation levels, row-level locks, and multi-version concurrency control without UNDO."
 ---
 
-**PG的事务**
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*
 
-为了保证事务的ACID特性，rdbms必须要实现并发控制。pg和oracle、mysql(innodb)数据库都使用MVCC来实现并发控制。MVCC通过数据变化时不断生成新版本对象和可查询一定范围的老版本对象来实现并发，MVCC保存数据在某个时间点的快照，读数时选择一个版本进行读取。
+**PostgreSQL Transactions**
 
-oracle、mysql都通过undo来记录老版本对象，pg没有undo，而是在DML时在直接将历史数据写在原表上（update会创建新行，delete标记行），并在表中记录额外的列xmin,xmax来记录事务号，通过对比事务号和一些其他信息来实现mvcc机制。
+To guarantee the ACID properties of transactions, RDBMS must implement concurrency control. PostgreSQL, Oracle, and MySQL (InnoDB) all use MVCC for concurrency control. MVCC achieves concurrency by continuously generating new version objects when data changes while allowing queries to access a certain range of older versions. MVCC stores a snapshot of data at a point in time, and reads select an appropriate version to read.
 
-在众多关系型数据库中，pg的事务机制非常有特色，了解pg的事务机制是了解pg数据库运行原理的关键。
+Oracle and MySQL both use UNDO to record old versions of objects. PostgreSQL has no UNDO; instead, during DML operations, historical data is kept directly in the original table (UPDATE creates a new row, DELETE marks the row), with extra system columns xmin and xmax recording transaction IDs. MVCC is implemented by comparing transaction IDs and other metadata.
+
+Among relational databases, PostgreSQL's transaction mechanism is quite distinctive. Understanding it is key to understanding how PostgreSQL operates internally.
 
 
 
-## 事务隔离级别
+## Transaction Isolation Levels
 
 一般关系型数据库都可以设置多个不同的事务隔离级别。在不步的事务隔离级别下，事务并发行为有所不同
 
-### 设置事务隔离级别
+### Setting Transaction Isolation Levels
 
 pg支持设置4种事务隔离级别（实际上只会生效有3个）
 
@@ -97,7 +99,7 @@ SET
 ```
 
 
-### ANSI92的事务隔离级别
+### ANSI SQL-92 Transaction Isolation Levels
 
 在*ANSI SQL-92*事务隔离级别标准中包含4种隔离级别：
 
@@ -155,7 +157,7 @@ pg没有未提交读这个隔离级别，设置未提交读会被当做已提交
 | 可重复读     | 不可能 | 不可能     | 不可能 |
 | 序列化       | 不可能 | 不可能     | 不可能 |
 
-### 事务隔离级别的历史
+### Transaction Isolation Levels的历史
 
 ANSI SQL-92定义的隔离级别和异常现象确实对数据库行业影响深远，甚至30年后的今天，绝大部分工程师对事务隔离级别的概念还停留在此，甚至很多真实的数据库隔离级别实现也停留在此。但后ANSI92时代对事物隔离有许多讨论甚至批评，针对隔离级别和异常现象的论文、博客、文章、讨论非常多，这里概况一下事务的比较重要发展历史：
 
@@ -179,7 +181,7 @@ ANSI SQL-92定义的隔离级别和异常现象确实对数据库行业影响深
 ![在这里插入图片描述](/img/csdn/b45dce972611.png)
 
 
-### 各种数据库支持的隔离级别
+### Isolation Levels Supported by Various Databases
 
 很多数据库的声称他们”完全支持ACID“特性，但是没有可串行化是不能完全实现ACID的（特别是一致性）。然而许多数据库在不支持可串行化级别下声称他们支持ACID。其实他们绝大部分都没有完全实现，包括数据库老大哥oracle。
 
@@ -188,21 +190,21 @@ ANSI SQL-92定义的隔离级别和异常现象确实对数据库行业影响深
 
 
 
-### 可串行化
+### Serializable
 
-人们对可串行化存在许多误解。
+There are many misconceptions about Serializable isolation.
 
 可串行化的含义：如果每个事务本身是正确的，即满足某些完整性条件，那么包括这些事务的任何串行执行的时间表是正确的（其事务仍然满足其条件）：“串行”意味着事务在时间上不重叠，并且不能相互干扰，即彼此之间存在完全隔离。
 
-1970年代可串行化（serializable）通过严格两阶段锁（SS2PL）实现，读写相互阻塞，直到事务结束。SS2PL丢失高可用性但消除了异常现象。
+In the 1970s, serializability was implemented through Strict Two-Phase Locking (SS2PL), where reads and writes block each other until the transaction ends. SS2PL sacrifices concurrency but eliminates anomaly phenomena.
 
-除了SS2PL实现可串行化，还有其他方式，比如可串行化快照隔离（SSI）。
+Besides SS2PL, there are other ways to achieve serializability, such as Serializable Snapshot Isolation (SSI).
 
 为了保证没有异常，可串行化会丢失一些并发性（不同实现方式有所不同），但可以真正保证数据的一致性（ACID中的consistency）。也就是说没有实现串行化的数据库，其实没有完全支持ACID特性
 
 可串行化在数学上已经证明可以实现，但是真实的数据库世界有点”不正常“。实际上，可串行化是事务隔离级别中最高级的，也是所有学者和大佬强力推荐的隔离级别，不过绝大部分数据库在RC或快照隔离级别上运行
 
-### 为什么弱隔离级别在学术上有问题，实际上没出现严重问题？
+### Why Weak Isolation Levels Are Academically Problematic but Practically Not Disastrous
 
 1.非可串行化隔离级别的异常现象，一般都需要再高并发情况下才会发生，一般低并发数据库不太会出现问题
 
@@ -216,7 +218,7 @@ ANSI SQL-92定义的隔离级别和异常现象确实对数据库行业影响深
 
 6.业务基于机制开发，而不是规则开发。业务多少有点适应弱隔离级别的异常现象，特别是RC或快照隔离级别  
 
-### 快照隔离
+### Snapshot Isolation
 
 ANSI SQL92并未定义快照隔离snapshot isolation(SI)，这个隔离级别随着数据库行业发展才出现。
 
@@ -226,7 +228,7 @@ ANSI SQL92并未定义快照隔离snapshot isolation(SI)，这个隔离级别随
 
 1992年 ANSI SQL92标准基于数据库的锁而定义，所以没有快照隔离级别这个定义。直到1995年《批判》的出现才被提出。
 
-### 快照隔离串行化
+### Snapshot Isolation串行化
 
 由于快照隔离的广泛应用，而可序列化是学术上的数据库需要达到的隔离级别目标，可序列化快照隔离Serializable Snapshot Isolation (SSI) 随即产生。顾名思义，在快照隔离的基础上实现可序列化。
 
@@ -234,7 +236,7 @@ ANSI SQL92并未定义快照隔离snapshot isolation(SI)，这个隔离级别随
 
 主流数据库通过基于S2PL或MVCC实现并发控制。在S2PL下写操作会阻塞其他事务读写，因此不会有写偏序异常问题。而MVCC实现了读写互不阻塞，只有写写冲突。在并发RW模式模式下会导致写偏序问题。SSI在pg9.1开始已经嵌入快照隔离SI中（pg只有快照隔离，哪怕是在可序列化级别下），解决了写偏序等异常。
 
-### 写偏序
+### Write Skew
 
 由于某些冲突构成环，会出现串行化异常**。**其中比较容易理解的一个就是写偏序(write skew)。
 
@@ -256,7 +258,7 @@ ANSI SQL92并未定义快照隔离snapshot isolation(SI)，这个隔离级别随
 
 黑白球问题说明：快照隔离执行结果与串行化执行结果不一致，快照隔离下发生写偏序异常，数据结果与预期不一致。
 
-### pg中的SSI
+### SSI in PostgreSQL
 
 postgresql数据库是首个在数据库中实现SSI的数据库。
 
@@ -297,7 +299,7 @@ SSI是可序列化的另一种方案。它仍然会使用快照隔离，只是�
 
 可序列化能极大的简化应用对一致性的担心，而pg9.1已实现ssi并加以优化。期待应用有一天真的能使用可串行化隔离级别。
 
-### 事务隔离级别参考 
+### Transaction Isolation Levels参考 
 
 <https://wiki.postgresql.org/wiki/SSI>
 
@@ -319,9 +321,9 @@ SSI是可序列化的另一种方案。它仍然会使用快照隔离，只是�
 
 
 
-## 事务的处理
+## Transaction Processing
 
-### 事务块
+### Transaction Blocks
 
 从事务形态划分可分为隐式事务和显示事务。隐式事务是一个独立的SQL语句，执行完成后默认提交。显示事务需要显示声明一个事务，多个sql语句组合到一起称为一个事务块。
 
@@ -351,7 +353,7 @@ ROLLBACK
 
 
 
-### 事务处理函数
+### Transaction Processing Functions
 
 事务处理函数分为3个层次：顶层事务函数、中层事务函数、底层事务函数
 顶层事务函数，处理事务块命令，比如`BEGIN`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`等，有如下函数
@@ -385,7 +387,7 @@ ROLLBACK
 
 其实这上面几个函数还是比较好分辨的。抛开几个特殊的函数（上层相关`savepoint`，中层`abort`函数），其实上、中、下三层事务层分成了：*Block（事务块函数），*Command（command函数），*Transaction（真正的事务处理函数）。然后把`savepoint`子事务当做事务块函数（后面会介绍，子事务可以在事务块中回退，所以这里把子事务放在事务块一级理所当然），把`abort`命令当做command级函数就可以了。
 
-### 事务块状态
+### Transaction Blocks状态
 
 上层函数和中层函数同时控制事务块状态，底层函数控制事务状态
 
@@ -448,7 +450,7 @@ TBLOCK_SUBABORT_RESTART        /* 失败子事务，收到ROLLBACK TO命令 */
 >
 > \* 当我最终看到用户`COMMIT`或者`ROLLBACK`时，执行`CleanupTransaction`；该函数将清理资源并让我们完全跳出事务。特别是，在此之前我们不能破坏`TopTransactionContext`。
 
-### 事务状态
+### Transaction States
 
 事务状态一目了然(注意跟事务块状态是不同的)
 
@@ -464,7 +466,7 @@ TRANS_PREPARE                /* prepare事务（2pc） */
 } TransState;
 ```
 
-### 事务状态流转
+### Transaction States流转
 
 事务块中的一个个命令，调用事务函数，事务函数转变事务、事务块的状态
 以一个最简单的事务块举例（参考readme）
@@ -508,16 +510,16 @@ TRANS_PREPARE                /* prepare事务（2pc） */
 ![在这里插入图片描述](/img/csdn/b8f307da3f3f.png)
 
 
-### 事务函数参考
+### Transaction Function References
 《postgresql技术内幕》
 src/backend/access/transam/README
 
 
-## 事务ID
+## Transaction ID
 
 pg中每个事务都会分配事务ID，事务ID分为虚拟事务ID和持久化事务ID。pg的事务ID非常重要，是理解事务、数据可见性、事务ID回卷等等的重要知识点。
 
-### 虚拟事务ID
+### Virtual Transaction IDs
 
 只读事务不会分配事务ID，事务ID是很宝贵的资源，比如简单的select语句不会申请事务ID。本身不需要把事务ID持久化到磁盘，但是为了在共享锁等情况下对事务进行标识，需要一种非持久化的事务ID，这个就是虚拟事务ID（vxid)
 VXID由两部分组成：backendID 和backend本地计数器。
@@ -580,9 +582,9 @@ lzldb=# select locktype,virtualxid,virtualtransaction,mode from pg_locks;
 - 子事务没有自己的VXID，他们用父事务的VXID
 - VXID也有回卷，不过问题不严重，因为没有持久化，实例重启后VXID从头开始计数
 
-### 永久事务ID
+### Permanent Transaction IDs
 
-#### 32位的TransactionId
+#### 32-bit TransactionId
 
 当发生数据变化的事务开始时，事务管理器会为事务分配一个唯一标识`TransactionId`。`TransactionId`是32位无符号整型，总共可以存储 `2^32=4294967296`，42亿多个事务。32位无符号整型能存储的数据范围为：`0~2^32-1`
 
@@ -613,7 +615,7 @@ src/include/access/transam.h中宏定义几个事务ID
 最大事务ID MaxTransactionId是0xFFFFFFFF=4294967295=2^32-1
 所以正常事务id能分配到的范围为:3~2^32-1  
 
-#### 64位的FullTransactionId
+#### 64-bit FullTransactionId
 
 事务ID是顺序递增的，PostgreSQL一直使用32位事务ID。在PostgreSQL 7.2之前，当32位事务ID用完时，必须dump然后恢复数据库。而64位的事务ID几乎是用不完的。源码中定义64位`FullTransactionId`为结构体
 
@@ -643,7 +645,7 @@ full的事务id可以超过2^32：
 
 
 
-### 事务ID分配
+### Transaction ID分配
 
 做几个小实验来看下事务id是怎么分配的。其中用到两个返回事务id的function
 
@@ -718,7 +720,7 @@ postgres=# select xmin,count(*) from pg_class where xmin=1 group by xmin;
 - begin不会立即分配事务id，begin后的第一个非查询语句分配事务id
 - 当一个事务插入了一tuple后，会将事务的txid写入这个tuple的xmin。
 
-### 事务ID对比
+### Transaction ID对比
 
 pg事务新旧通过事务ID来对比。在`src/backend/access/transam/transam.c`定义了4种事务ID对比函数，分别是<,<=,>,>=
 
@@ -804,7 +806,7 @@ id1-id2可以是负数，所以diff不能是unsign int，转换有符号型的in
 
 
 
-### 事务ID回卷
+### Transaction ID回卷
 
 **什么是事务ID回卷**？
 
@@ -839,7 +841,7 @@ id1-id2可以是负数，所以diff不能是unsign int，转换有符号型的in
 
 
 
-### 事务id冻结
+### Transaction ID Freezing
 
 为了解决事务回卷引起严重的数据丢失问题，pg引入事务冻结的概念。
 
@@ -866,13 +868,13 @@ xid会循环使用，并分成2半，一半可见一半不可见。如xid=100的
 
  
 
-### 64位的事务id
+### 64-bit Transaction IDs
 
 事务id耗尽回卷问题**终极解决方案**就是使用64位的事务ID。32位事务id有`2^32`个，64位事务id有`2^64`个。即使每秒10000个事务，每天864000000个事务，也要5849万年才能把事务id消耗光。如果拥有64位事务id，事务id几乎是取之不尽用之不竭，就不需要考虑事务id回卷问题，也不需要事务冻结操作，也就没有“冻结炸弹”的概念...
 
-**为什么还没有实现64位事务id？**
+**Why haven't 64-bit transaction IDs been implemented yet?**
 
-请注意，64为事务id已经在pg库中了（就像前面介绍的FullTransactionId）。但因为元组存储结构有限，元组中的xmin、xmax等等仍然用的是32位的XID，事务id对比大小仍然依赖32位的XID。xmin，xmax可以简单理解为插入事务和删除事务的事务id，保存在每个元组的header中（元组结构章节将介绍该部分内容），而header空间是有限的。32位事务id有8个字节，64位事务有16个字节，存储xmin、xmax两个事务id将需要额外的16字节空间，目前header无法保存这么大的数据。社区讨论过两种实现方案
+Note that 64-bit transaction IDs already exist in PostgreSQL (as the FullTransactionId described earlier). However, due to limited tuple storage structure, the xmin, xmax, etc. in tuples still use 32-bit XIDs, and transaction ID comparison still relies on 32-bit XIDs. xmin and xmax can be simply understood as the transaction IDs of the inserting and deleting transactions, stored in each tuple's header (the tuple structure section covers this). The header space is limited—32-bit transaction IDs are 4 bytes each, while 64-bit would be 8 bytes each. Storing both xmin and xmax would require an additional 8 bytes, which the current header cannot accommodate. The community has discussed two implementation approaches:
 
 1.扩展header。直接将64位事务id存储进去
 
@@ -892,7 +894,7 @@ xid会循环使用，并分成2半，一半可见一半不可见。如xid=100的
 
  
 
-### 事务id参考
+### Transaction ID References
 
 《Postgresql指南 内幕探索》
 <https://www.interdb.jp/pg/pgsql05.html>
@@ -908,11 +910,11 @@ xid会循环使用，并分成2半，一半可见一半不可见。如xid=100的
 
 
 
-## **事务相关的元组结构**
+## Transaction-Related Tuple Structure
 
 元组结构中包含很多pg的mvcc所必要的信息，下面的内容将梳理xmin,xmax,t_ctid,cmin,cmax,combo cid,tuple id的含义和关系
 
-### **物理结构**
+### Physical Structure
 ![在这里插入图片描述](/img/csdn/2d7dd2db28e1.png)
 
 
@@ -957,7 +959,7 @@ struct HeapTupleHeaderData
 - `t_cid`：表示命令标识(command id,cid)，一个事务可以包含多个SQL，事务中的命令从0开始编号，cid依次递增。CommandId是uint32类型，最大支持2^32 - 1个命令，为了节省资源，而且查询不会影响行的事务顺序，查询不会增加cid（这点类似事务id分配）
 - `t_ctid`：保存指向自身或新元组标识符(tid）,tid是标识表中元组的，是元组的物理地址。如果一条记录被修改多次，那么该记录会存在多个版本。各个版本通过t_cid串联，形成一个版本链。通过这个版本链，可以找到最新的版本
 
-### **系统列**
+### System Columns
 
 每个元组都有6个系统列（每个tuple都有，可以直接查到），它们是`tableoid`,`xmin`,`xmax`,`cmin`,`cmax`,`ctid` 。`tableoid`是表的oid，在查询和dml时是不会变化的，这里重点讲其余5个系统列
 
@@ -1011,7 +1013,7 @@ do { \
 )
 ```
 
-### **combocid**
+### Combo CID
 
 在8.3以前`cmin`和`cmax`是分开的。后来考虑到同事务对一条数据既插入又删除的情况比较少，而且事务结束后`cmin`、`cmax`都不需要，同时为了节省header空间，`cmin`、`cmax`合并到一起称为combo command id即`combocid`
 
@@ -1059,14 +1061,14 @@ if (comboHash == NULL)
 
 所以这几个command id的关系和调用过程：**combocid->(cmin,cmax)->(t_ctid,t_ctid)**
 
-### 简单的事务相关id和系统列关系
+### Simple Transaction-Related ID and System Column Relationships
 
 看了这么多id和源码，似乎有点乱。为了便于理解和记忆，梳理一下这些事务id、command id、tuple id的关系
 
 ![在这里插入图片描述](/img/csdn/077888610817.png)
 
 
-### 事务的初步体验
+### Initial Transaction Experience
 
 在没有工具和插件的条件下，初步体验一下这几个系统列在事务中的变化
 
@@ -1104,9 +1106,9 @@ lzldb=# select xmin,xmax,cmin,cmax,ctid from lzl1;
   624 |    0 |    0 |    0 | (0,3)
 ```
 
-## 元组header与事务
+## Tuple Headers and Transactions
 
-### pageinspect插件
+### The pageinspect Extension
 
 直接看行的变化是看不到旧的tuple的，所以需要pageinsect插件。pageinsect插件是pg自带的第三方插件，可以展示数据页面的具体内容。为了观察tuple是如何支持事务的，需要用到`get_raw_page()`和`heap_page_items()`两个函数。
 `get_raw_page()`：返回指定块的二进制值。其中fork有main、fsm、vm、init几个值。main是数据文件主文件，fsm是free space map块文件，vm是可见性映射快文件，init是初始化的块，如果不指定fork默认为main
@@ -1123,7 +1125,7 @@ lzldb=# select t_xmin,t_xmax,t_field3 as t_cid,t_ctid from heap_page_items(get_r
     633 |      0 |     0 | (0,1)
 ```
 
-### lp（line pointer）
+### Line Pointers (lp)
 
 line pointer直译是行指针的意思，实际上是页面中的行指针**编号**，相当于在页面中标记了一个元组。t_ctid看上去更像是tuple id，但是ctid只是（表的page号，行指针编号）的组合，ctid可以指向下个lp 。
 例如对一个元组做一次update，会增加一个元组，新元组的lp编号+1，旧tuple的ctid指向新tuple的lp，新tuple的ctid指向自己
@@ -1179,11 +1181,11 @@ lzldb=# select lp,lp_flags,lp_off,lp_len from heap_page_items(get_raw_page('lzl1
   1 |        1 |   8160 |     28
 ```
 
-### infomask
+### Infomask
 
 infomask提供了事务、锁、元组状态等信息，比如提交、终止、锁、HOT信息等等。header中有两个infomask：`infomask`和`infomask2`。他们存储的信息有所不同
 
-#### infomask,infomask2
+#### Infomask,infomask2
 
 `infomask`源码还是在`src/include/access/htup_details.h`
 
@@ -1195,7 +1197,7 @@ infomask提供了事务、锁、元组状态等信息，比如提交、终止、
 	uint16		t_infomask;		/* various flag bits, see below */
 ```
 
-#### infomask的标识含义
+#### Infomask的标识含义
 
 ```c
 /*
@@ -1229,7 +1231,7 @@ infomask提供了事务、锁、元组状态等信息，比如提交、终止、
 
 ```
 
-#### infomask2的标识含义
+#### Infomask2的标识含义
 
 ```c
 #define HEAP_NATTS_MASK			0x07FF	/* 有11位用来保存元组的列的数量，（MaxHeapAttributeNumber用户的列长度是1600个）*/
@@ -1243,7 +1245,7 @@ infomask提供了事务、锁、元组状态等信息，比如提交、终止、
 
 ```
 
-#### infomask的位与位计算
+#### Infomask的位与位计算
 
 把16进制转换为2进制，就比较容易理解**位**所代表的含义
 
@@ -1292,7 +1294,7 @@ infomask2:
 1110000000000000 0xE000 HEAP2_XACT_MASK
 ```
 
-#### 怎么计算infomask？
+#### How to Calculate Infomask?
 
 infomask的标识是16进制，pageinspect插件查infomask出来的是10进制。需要to_hex()，10进制转换为16进制的函数 ，做一个转换
 
@@ -1319,7 +1321,7 @@ lzldb=# SELECT t_ctid, raw_flags, combined_flags
  (0,1)  | {HEAP_XMIN_COMMITTED,HEAP_XMIN_INVALID,HEAP_XMAX_INVALID,HEAP_UPDATED} | {HEAP_XMIN_FROZEN}
 ```
 
-### 提交日志clog
+### Commit Log (CLOG)
 
 pg用提交日志（commit log，clog）来保存事务状态。pg会在事务完成前就将事务写进wal日志，这也是wal的含义。如果终止事务，将事务状态写进wal和clog，在实例恢复时，也能知道事务是没有完成提交的。
 在需要获取事务状态时，比如判断事务可见性时，pg会读取clog的事务状态。
@@ -1360,9 +1362,9 @@ total 8
 clog文件大小为256KB，而内存中通过page存储事务为8K，所以0000文件的大小只会是8192的倍数，当写了32个clog page后，下个page便写入0001文件。PostgreSQL 启动时会从 pg_xact 中读取事务的状态加载至内存。
 系统运行过程中，并不是所有事务的状态都需要长期保留在 CLOG 文件中，因此 vacuum 操作会定期将不再使用的 CLOG 文件删除
 
-### **Hint Bits**
+### Hint Bits
 
-#### 什么是hintbits？
+#### What Are Hint Bits?
 
 hint bits是为了标记那些创建或删除的行的事务是否提交或终止。如果没有hint bits，事务可见性需要访问磁盘pg_clog或pg_subtrans，这种访问代价比较昂贵。如果元组被设置了hint bits，那么访问page中的元组，就能知道元组状态，不需要额外的访问。
 源码中使用`SetHintBits()`函数设置hintbits
@@ -1382,7 +1384,7 @@ SetHintBits(tuple, buffer, HEAP_XMIN_COMMITTED,
 #define HEAP_XMAX_INVALID		0x0800	/* t_xmax对于的删除或更新事务无效或终止 */
 ```
 
-#### 查询会产生写入
+#### Queries Can Produce Writes
 
 事务开始后，pg的dml事务会在元组header中记录t_min等事务id和事务状态。但事务结束时，不会在header中作任何事情，而是在后面的DML或者DQL，VACUUM等SQL扫描到对应的TUPLE时，触发`SetHintBits`的操作（产生新快照访问数据时`SetHintBits`，代码在`HeapTupleSatisfiesMVCC()`中，后面可见性规则小节会介绍）。
 
@@ -1424,12 +1426,12 @@ lzldb=# SELECT t_ctid, raw_flags, combined_flags
 
 **hintbits缺点**：如果一个事务更新了多行，下一次查询检测可见性时可能会从pg_clog中读取事务状态，并更新非常多的page。
 
-#### hintbits是否会产生WAL日志？
+#### Do Hint Bits Produce WAL Logs?
 
 在开启 checksum 或者参数 wal_log_hints 为 true 的情况下，如果 checkpoint 后第一次使页面 dirty 的操作是更新 Hint Bits，则会产生一条 WAL 日志，将当前页面写入 WAL 日志中(即 Full Page Image)，避免产生部分写，导致数据 checksum 异常。
 因此，在开启 checksum 或者  参数 wal_log_hints 为 true 时，即便执行 SELECT，也可能更改页面的 Hint Bits，从而导致产生 WAL 日志，这会在一定程度上增加 WAL 日志占用的存储空间。如果在使用pg中发现执行SELECT会触发磁盘的写入操作，可以检查一下是否开启了CHECKSUM或者wal_log_hints。
 
-#### hintbits为什么延迟更新？
+#### Why Are Hint Bits Updated Lazily?
 
 源码`src/backend/access/heap/heapam_visibility.c`里，在可见性规则`HeapTupleSatisfiesMVCC()`注释中有一段hintbits为什么延迟更新的解释
 
@@ -1443,13 +1445,13 @@ lzldb=# SELECT t_ctid, raw_flags, combined_flags
 */
 ```
 
-简单点说，hintbits立即更新性能非常差，所以将事务状态先放在clog，减少PGXACT的争用，以提升性能。hintbits延迟更新就造成了后续查询可能会更新元组的情况
+In short, immediately updating hint bits has very poor performance, so transaction status is first stored in CLOG to reduce contention on PGXACT, improving performance. The delayed update of hint bits results in subsequent queries potentially updating tuples.
 
-## 元组的增删改
+## Tuple INSERT, DELETE, and UPDATE
 
 在积累了元组header、系统列、clog、hintbits等知识点后，我们来看下pg是如何完成增删改操作。
 
-### 观察DML事务
+### Observing DML Transactions
 
 通过对lp,lp_flags,ctid,xmin,xmax,cid(cmin,cmax),infomask,infomask2这些元组头部信息，观察pg的DML事务行为
 观察这些内容会使用以下sql
@@ -1482,7 +1484,7 @@ raw_flags      | {HEAP_XMAX_INVALID,HEAP_UPDATED,HEAP_ONLY_TUPLE}
 combined_flags | {}
 ```
 
-### 插入
+### INSERT
 
 清空数据，insert插入一行
 
@@ -1507,7 +1509,7 @@ lp，line pointer行指针编号，递增
 xmax为0表示无效事务ID，infomask也仅说明xmax无效，该元组还没有"经历"删除事务
 cid从0开始递增，0代表事务第一个command，1代表事务第二个command
 
-### 删除
+### DELETE
 
 ```sql
 lzldb=# begin;
@@ -1529,7 +1531,7 @@ xmax更新为删除事务id
 infomask标识有HEAP_KEYS_UPDATED表示元组删除了（实际上HEAP_KEYS_UPDATED的有删除或更新的意思）
 虽然只更新了第一个元组，但是第二个元组更新了infomask HEAP_XMIN_COMMITTED
 
-### 更新
+### UPDATE
 
 ```sql
 lzldb=# begin;
@@ -1551,7 +1553,7 @@ lp=2 为更新事务的老元组，t_xmax更新为更新事务id，infomask增�
 lp=3 为更新事务的新元组，相当于插入了一个新元组，不过xmin事务id跟老元组xmax一致，并且infomask有额外标识HEAP_UPDATED表示该元组是update后的row
 另外，一个看不见的被删除的元组 lp=1，在不相关的更新事务发生后，infomask增加了标识HEAP_XMAX_COMMITTED
 
-### 回退
+### ROLLBACK
 
 ```sql
 lzldb=# truncate table lzl1;
@@ -1652,7 +1654,7 @@ pg的快照优化性能对比
 
 
 
-## pg中的快照
+## Snapshots in PostgreSQL
 
 快照（snapshot）是记录数据库当前瞬时状态的一个数据结构。pg数据库的快照保存当前所有活动事务的最小事务ID、最大事务ID、当前活跃事务列表、当前事务的command id等
 快照数据保存在SnapshotData结构体类型中，源码`src/include/utils/snapshot.h`
@@ -1687,7 +1689,7 @@ typedef struct SnapshotData *Snapshot;
 
 快照中最重要的信息是`xmin`、`xmax`、`xip_list`。通过`pg_current_snapshot()`（pg12及以前用 txid_current_snapshot () ）显示当前事务的快照。
 
-**注意区分快照xmin、xmax跟元组上的xmin、xmax，含义是不一样的。**
+**Important: Snapshot xmin/xmax and tuple xmin/xmax have different meanings.**
 
 ```sql
 lzldb=*# select pg_current_snapshot();
@@ -1704,7 +1706,7 @@ lzldb=*# select pg_current_snapshot();
 
 ![在这里插入图片描述](/img/csdn/b7605604abbc.png)
 
-### 快照类型
+### Snapshot Types
 
 除了mvcc快照以外，pg在`src/include/utils/snapshot.h`中还定义了一些其他的快照类型
 
@@ -1754,7 +1756,7 @@ SNAPSHOT_NON_VACUUMABLE
 
 	
 
-### 快照与隔离级别
+### Snapshots and Isolation Levels
 
 不同的隔离级别，快照获取方式是不一样的
 
@@ -1765,7 +1767,7 @@ rc模式需要事务中的每个sql都获得快照，而rr模式在事务中只�
 
 
 
-### 进程上的事务结构体
+### Process-Level Transaction Structures
 
 pg在获得快照数据的时候，需要检索所有backend进程的事务状态。
 
@@ -1773,7 +1775,7 @@ pg在获得快照数据的时候，需要检索所有backend进程的事务状�
 
 这些process相关结构体包含一些进程、锁等信息，这里只研究process里事务相关的信息。源码以pg13源码为示例
 
-#### PGPROC结构体
+#### The PGPROC Structure
 
 源码`src/include/storage/proc.h`
 
@@ -1802,7 +1804,7 @@ XLogRecPtr	clogGroupMemberLsn; /* 当前要提交的xid的commit日志的lsn号 
 
 ```
 
-#### PGXACT结构体
+#### The PGXACT Structure
 
 ```c
 //在9.2以前，PGXACT的信息在PGPROC中，由于压测显示在多cpu系统中，因为减少了获取的缓存行数，把两者分开GetSnapshotData会更快，
@@ -1823,7 +1825,7 @@ typedef struct PGXACT
 
 能看出pgxact保存的信息比较简单，是backend的xmin、xmax等事务相关信息。**而pgproc更倾向于保存backend的基本信息，pgproc中还是有一部分不太频繁调用的事务信息，不过最核心的进程事务信息在pgxact中**
 
-#### PROC_HDR(PROCGLOBAL)结构体
+#### The PROC_HDR (PROCGLOBAL) Structure
 
 每个backend process都有proc结构体，很明显在高并发场景下扫描所有proc寻找事务信息比较耗时，这时需要一个实例级别的结构体存储所有proc信息，这个结构体就是PROCGLOBAL**。**
 
@@ -1849,7 +1851,7 @@ typedef struct PROC_HDR
 } PROC_HDR;
 ```
 
-#### PROCARRAY结构体
+#### The PROCARRAY Structure
 
 procarray在`procarray.c`中，`procarray.c`是维护所有backend的PGPROC和PGXACT结构的。
 
@@ -1889,7 +1891,7 @@ static ProcArrayStruct *procArray;
 
 ```
 
-### **获得快照**
+### Obtaining Snapshots
 
 #### GetTransactionSnapshot()
 
@@ -2196,9 +2198,9 @@ GetSnapshotData(Snapshot snapshot)
 
 ```
 
-### pg14对事务的优化
+### PostgreSQL 14 Transaction Optimizations
 
-#### pg14事务优化源码分析
+#### PostgreSQL 14 Transaction Optimization Source Analysis
 
 pg13的源码能看出来`GetSnapshotData()`中写死了`old_snapshot_threshold>=0`时，每次获得快照数据都会产生较多的`SpinLock`和`LWLock`，而获得快照对于数据库来说是非常频繁的操作，这必定导致一些性能问题。所以pg14中直接把old_snapshot_threshold部分删除了···
 
@@ -2255,7 +2257,7 @@ pg13的源码能看出来`GetSnapshotData()`中写死了`old_snapshot_threshold>
 
 可以看出maybe_needed和definitely_needed跟快照xmin、xmax是相似的，多嵌套了1层计算。先计算boundaries，再进一步精确计算horizons。GlobalVisTestShouldUpdate减少了计算boundaries的场景，而ComputeXidHorizons()精准计算也更高效。
 
-#### 优化结果
+#### Optimization Results
 
 推荐一篇pg快照优化的文章：
 
@@ -2268,7 +2270,7 @@ pg13的源码能看出来`GetSnapshotData()`中写死了`old_snapshot_threshold>
 
 ![在这里插入图片描述](/img/csdn/8cd67db0e65f.png)
 
-### reference
+### References
 
 books：
 《postgresql指南 内幕探索》
@@ -2296,7 +2298,7 @@ pg的快照优化性能对比
 <https://mp.weixin.qq.com/s/j-8uRuZDRf4mHIQR_ZKIEg>
 
 
-## 可见性检查
+## Visibility Check
 
 快照有了，就可以通过快照数据去判断元组的可见性。回顾一下（先不考虑子事务），事务的关键信息：元组头部事务信息、快照信息、clog事务状态(SetHintBits前需要）
 
@@ -2623,8 +2625,8 @@ HeapTupleSatisfiesMVCC(HeapTuple htup, Snapshot snapshot,
 
    - 元组有frozen标记时的可见性判断
   
-## multixact
-### 什么是multixact？
+## MultiXact
+### What is MultiXact?
 
 在对同一行加锁时，元组上关联的事务ID可能有多个，pg将多个事务ID组合起来用一个MultiXactID来管理。TransactionId和MultiXactID是多对一的关系
 
@@ -2642,7 +2644,7 @@ MultiXactId的0、1都是系统使用，可分配的MultiXactId从2开始
 #define MaxMultiXactId		((MultiXactId) 0xFFFFFFFF)
 ```
 
-### **行锁的类型**
+### Row Lock Types
 
 只有行上有锁时，才会有multixact。MultiXact总共定义了6种状态
 
@@ -2662,7 +2664,7 @@ MultiXactStatusUpdate = 0x05
 
 其中能显示声明的行锁的状态有4种：ForKeyShare，ForShare，ForNoKeyUpdate，ForUpdate
 
-### multixact的infomask标记
+### MultiXact的infomask标记
 
 pg会将行锁标记到xmax上并记录到infomask中
 源码`src/include/access/htup_details.h`
@@ -2712,7 +2714,7 @@ HEAP_XMAX_IS_MULTI的16进制值是1000，转换为10进制为4096，通过`(t_i
 - multixact id一般来说比transaction id小，所以这里t_xmax比t_xmin更小
 - 如果是一个update语句更新的元组，那么新旧元组的xmax肯定是相等的。但是在multixact的场景下，可能就不一样了。
 
-### multixact slru
+### MultiXact slru
 
 虽然`src/backend/access/transam/multixact.c`的开头定义很多变量和函数，有`page`,`member`,`membergoup`,`offset`，但是总体都是定义变量值，然后定义这些变量进行相互转化的函数
 
@@ -2773,7 +2775,7 @@ MultiXact页编号回卷于0xFFFFFFFF/MULTIXACT_OFFSETS_PER_PAGE=2^32^/2048=2^21
 
 `TruncateMultiXact()`会清理这些段包括页编号，`TruncateMultiXact()`被vacuum调用
 
-### **pg_multixact目录**
+### The pg_multixact Directory
 
 同CLOG，SUBTRANS日志一样，multixact日志SLRU缓冲池实现。`pg_multixact`目录下只有两个目录`member`,`offset`
 
@@ -2809,7 +2811,7 @@ typedef struct MultiXactMember
 } MultiXactMember;
 ```
 
-### multixact参考
+### MultiXact参考
 
 <https://www.postgresql.org/docs/current/routine-vacuuming.html>
 
@@ -2821,14 +2823,14 @@ typedef struct MultiXactMember
 
 <https://www.highgo.ca/2020/06/12/transactions-in-postgresql-and-their-mechanism/>
 
-## 2PC事务
-### 什么是2PC事务？
+## Two-Phase Commit (2PC) Transactions
+### What is a 2PC Transaction?
 
-事务原子性要求事务必须整体完成或者回滚。在多个联接的数据库等情况下的分布式事务中，必须为事务提供一致性状态，以满足分布式事务的原子性。与其他数据库一样，pg库也提供了 two-phase commit protocol(2PC)两阶段提交协议。
+Transaction atomicity requires that a transaction must either complete entirely or roll back entirely. In distributed transactions involving multiple connected databases, a consistent state must be maintained to satisfy distributed transaction atomicity. Like other databases, PostgreSQL also provides the two-phase commit protocol (2PC).
 
-分布式事务实现方案很多，2PC是其中最基础也是最常见的。分布式事务包括原子提交、原子可见性、全局一致性，2PC只是原子提交的实现方案。
+There are many distributed transaction implementation approaches, with 2PC being the most basic and most common. Distributed transactions encompass atomic commit, atomic visibility, and global consistency—2PC addresses only the atomic commit aspect.
 
-### prepare transaction
+### PREPARE TRANSACTION
 
 FDW可以自己处理2PC事务，pg也提供了显示使用2PC事务的方法prepare transaction。prepare transaction发起后，就不会与会话有任何关联，它状态会被保存下来。prepare transaction并不是设计为在应用或者交互式会话中使用，除非你在编写一个事务管理器，所以推荐（默认）关闭的。
 
@@ -2846,7 +2848,7 @@ ROLLBACK PREPARED transaction_id
 - PREPARE TRANSACTION 必须在事务块中，事务块以BEGIN|START STRANSATION开始
 - max_prepared_transactions控制prepare事务数，默认为0关闭，需要打开才能使用prepare事务
 
-### 开启一个prepare事务
+### Starting a PREPARE TRANSACTION
 
 ```sql
 lzldb=# begin;
@@ -2870,7 +2872,7 @@ lzldb=# select * from pg_prepared_xacts ;
 
 ```
 
-### pg_twophase目录 
+### The pg_twophase Directory 
 
 前面说过，prepare事务与会话无关，当开启一个prepare事务后，事务状态信息保存在缓存中。
 为了保证事务不丢失，prepare事务也会落盘，到`pg_twophase`目录。
@@ -2908,10 +2910,10 @@ total 4
 -rw------- 1 pg pg 116 Apr 29 16:33 000002D0
 ```
 
-### orphaned prepared transactions
+### Orphaned Prepared Transactions
 
 如果一个prepared事务没有完成（prepared事务不提交或回滚），而prepared事务又与会话无关，如果不显示结束这个事务的话，prepared事务仍然存在（会话断开后一般事务会回退），这就是orphaned prepared transactions。
-orphaned prepared transactions会一直持有一些锁、元组的资源，导致vacuum无法回收和清理死元组，甚至阻止事务ID回卷。比如一个prepared事务忘记提交或者回滚了，如果没有外部事务管理机制来监控，这个parepared事务将可能不被发现并永远存在，最终导致严重的问题。所以建议`max_prepared_transactions=0`（默认）或者通过`pg_prepared_xacts`视图监控prepared事务
+Orphaned prepared transactions will hold locks and tuple resources indefinitely, preventing VACUUM from reclaiming dead tuples and even blocking transaction ID wraparound. If a prepared transaction is forgotten without being committed or rolled back, and there is no external transaction manager monitoring it, this prepared transaction may go unnoticed and exist forever, eventually causing severe problems. Therefore, it is recommended to keep max_prepared_transactions=0 (the default) or to monitor prepared transactions via the pg_prepared_xacts view.
 
 下面模拟一个孤儿prepared事务无限期阻塞的情况
 
@@ -2947,7 +2949,7 @@ lzldb=# alter table lzl1 add column b int;
 ALTER TABLE
 ```
 
-###  2PC事务参考
+### 2PC Transaction References
 
 <http://postgres.cn/docs/13/sql-prepare-transaction.html>
 
@@ -2955,8 +2957,8 @@ ALTER TABLE
 
 <https://wiki.postgresql.org/wiki/Atomic_Commit_of_Distributed_Transactions>
 
-## 子事务
-### 什么是子事务？
+## Subtransactions
+### What Are Subtransactions?
 
 一般事务只能整体提交或回滚，而子事务允许部分事务回滚。
 
@@ -2964,7 +2966,7 @@ ALTER TABLE
 
 子事务在大批量数据写入的时候很有用。如果事务中存在多个子事务，而其中一小段子事务失败，只需要重做这小部分数据就行，而不需要整个事务数据全部重做。
 
-### 子事务在SQL语句中的使用
+### Subtransactions在SQL语句中的使用
 
 ```sql
 SAVEPOINT savepoint_name
@@ -3021,7 +3023,7 @@ lzldb=# select * from vlzl1;
 --子事务产生写入同样会消耗transaction id，而且cid在父事务框架下增加
 ```
 
-### **其他场景中产生子事务**
+### Other Scenarios That Generate Subtransactions
 
 即使不用`savepoint`，也有其他方法产生子事务
 
@@ -3034,7 +3036,7 @@ lzldb=# select * from vlzl1;
 - PL/Python代码引用plpy.subtransaction()
 
 
-### 子事务SLRU缓存
+### SubtransactionsSLRU缓存
 
 子事务提交日志在`pg_xact`，父子对应关系在`pg_subtrans`存储子事务缓存subXID和父XID的映射。当PostgreSQL需要查找subXID时，它会计算这个ID驻留在哪个内存页中，然后在内存页中进行搜索。如果页面不在缓存中，它会驱逐一个页面，并将所需的页面从pg_subtrans加载到内存中。大量的子事务cache miss会消耗系统的IO和cpu。
 
@@ -3072,7 +3074,7 @@ SUBTRANS_BUFFER能存储最多32*8k/4=65536个xid
 
 子事务xid在page中不一定是紧凑的，一个page可能少于2048个子事务id
 
-### 子事务的危害
+### Subtransactions的危害
 
 1. **PGPROC_MAX_CACHED_SUBXIDS溢出**
 
@@ -3146,16 +3148,16 @@ SELECT [some row] FOR UPDATE;
 
 我们发现工具（OGG）中默认是50个子事务，此时我们将工具中的子事务数据量降低到10-20个时，数据库性能得到缓解。
 
-**子事务的使用建议**
+**Subtransaction Usage Recommendations**
 
-- 除了显示savepoint使用子事务，excetpion、框架、工具中同样会产生子事务
-- 如果有从库查询业务，禁止使用子事务。
-- 谨慎使用行锁。for update+子事务同样会引起multixactid的问题
-- 如果仍有子事务，子事务设置不要超过64个，最好是更低
+- - Besides explicit SAVEPOINT usage, EXCEPTION blocks, frameworks, and tools can also generate subtransactions.
+- - If you have read replicas serving queries, subtransactions are prohibited.
+- - Use row locks with caution. FOR UPDATE combined with subtransactions can also cause MultiXactId issues.
+- - If subtransactions are unavoidable, keep them well below 64 per session, preferably even lower.
 
 子事务已经在国内外生产环境造成了非常多问题，有许多案例和问题分析。引用一下“Subtransactions are basically cursed. Rip em out.”
 
-### 子事务参考
+### Subtransactions参考
 
 <https://postgres.ai/blog/20210831-postgresql-subtransactions-considered-harmful>
 
@@ -3170,7 +3172,7 @@ SELECT [some row] FOR UPDATE;
 
 
 
-## reference
+## References
 
 books：
 
