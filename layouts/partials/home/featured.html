@@ -1,6 +1,6 @@
 {{ $featuredArticles := .Site.Params.homepage.featuredArticles | default slice }}
 {{ if gt (len $featuredArticles) 0 }}
-  <section class="mt-10">
+  <section class="mt-10 mb-12">
     <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h2 class="text-2xl font-extrabold">{{ i18n "featured.heading" }}</h2>
