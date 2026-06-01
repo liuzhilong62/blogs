@@ -1,13 +1,16 @@
-{{- /* llms-full.txt — 全站文章原始 Markdown，供 AI Agent 一次性摄入 */ -}}
+{{- /* llms-full.txt — full raw markdown for AI agents */ -}}
+{{- $all := where .Site.Pages "Section" "posts" }}
+{{- $posts := where $all "Language.Lang" .Language.Lang }}
+{{- if eq .Language.Lang "zh" }}
 # {{ .Site.Title }}
 
 > {{ .Site.Params.description | default "PostgreSQL DBA 技术博客" }}
-> 共 {{ len (where .RegularPages "Section" "posts") }} 篇文章
+> 共 {{ len $posts }} 篇文章
 > 生成时间：{{ now.Format "2006-01-02 15:04:05" }}
 
 ---
 
-{{- range (where .RegularPages "Section" "posts") }}
+{{- range $posts }}
 # {{ .Title }}
 
 {{- if .Description }}
@@ -20,4 +23,29 @@
 
 ---
 
+{{- end }}
+{{- else }}
+{{- /* English */ -}}
+# {{ .Site.Title }}
+
+> {{ .Site.Params.description | default "PostgreSQL DBA technical blog" }}
+> {{ len $posts }} articles
+> Generated: {{ now.Format "2006-01-02 15:04:05" }}
+
+---
+
+{{- range $posts }}
+# {{ .Title }}
+
+{{- if .Description }}
+> {{ .Description }}
+{{- end }}
+
+> Published {{ .Date.Format "2006-01-02" }}{{ with .Lastmod }} · Updated {{ .Format "2006-01-02" }}{{ end }}{{ with .ReadingTime }} · ~{{ . }} min read{{ end }}
+
+{{ .RawContent }}
+
+---
+
+{{- end }}
 {{- end }}

@@ -1,4 +1,7 @@
-{{- /* llms.txt — AI agent sitemap for lastdba.com */ -}}
+{{- /* llms.txt — AI agent sitemap */ -}}
+{{- $all := where .Site.Pages "Section" "posts" }}
+{{- $posts := where $all "Language.Lang" .Language.Lang }}
+{{- if eq .Language.Lang "zh" }}
 # {{ .Site.Title }}
 
 > {{ .Site.Params.description | default "PostgreSQL DBA 技术博客" }}
@@ -6,21 +9,20 @@
 ## 关于
 
 lastdba.com 是 PostgreSQL DBA 的技术博客，内容涵盖数据库案例、
-内核机制、源码解析、论文解读和读书笔记。共 {{ len (where .RegularPages "Section" "posts") }} 篇文章。
+内核机制、源码解析、论文解读。共 {{ len $posts }} 篇文章。
 
 {{- $featured := .Site.Params.homepage.featuredArticles | default slice }}
 
 ## 精选阅读
 
 {{- range $title := $featured }}
-  {{- range first 1 (where site.RegularPages "Title" $title) }}
+  {{- range first 1 (where $.RegularPages "Title" $title) }}
 - [{{ .Title }}]({{ .Permalink }}): {{ .Description | default .Summary | plainify }}
   {{- end }}
 {{- end }}
 
 ## 全部文章（按分类）
 
-{{- $posts := where .RegularPages "Section" "posts" }}
 {{- range .Site.Taxonomies.categories }}
   {{- $cat := .Page.Title }}
 ### {{ $cat }}
@@ -29,5 +31,39 @@ lastdba.com 是 PostgreSQL DBA 的技术博客，内容涵盖数据库案例、
   {{- if in .Params.categories $cat }}
 - [{{ .Title }}]({{ .Permalink }}): {{ .Description | default .Summary | plainify | truncate 120 }}
   {{- end }}
+{{- end }}
+{{- end }}
+{{- else }}
+{{- /* English */ -}}
+# {{ .Site.Title }}
+
+> {{ .Site.Params.description | default "PostgreSQL DBA technical blog" }}
+
+## About
+
+lastdba.com is a PostgreSQL DBA technical blog covering case studies,
+internals, source code analysis, and paper reviews. {{ len $posts }} articles total.
+
+{{- $featured := .Site.Params.homepage.featuredArticles | default slice }}
+
+## Featured
+
+{{- range $title := $featured }}
+  {{- range first 1 (where $.RegularPages "Title" $title) }}
+- [{{ .Title }}]({{ .Permalink }}): {{ .Description | default .Summary | plainify }}
+  {{- end }}
+{{- end }}
+
+## All Articles by Category
+
+{{- range .Site.Taxonomies.categories }}
+  {{- $cat := .Page.Title }}
+### {{ $cat }}
+
+{{- range $posts }}
+  {{- if in .Params.categories $cat }}
+- [{{ .Title }}]({{ .Permalink }}): {{ .Description | default .Summary | plainify | truncate 120 }}
+  {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
