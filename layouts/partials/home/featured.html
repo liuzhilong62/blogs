@@ -3,27 +3,15 @@
   <section class="mt-10">
     <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h2 class="text-2xl font-extrabold">精选阅读</h2>
-        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">数据库案例、内核机制、源码与年度经验</p>
+        <h2 class="text-2xl font-extrabold">{{ i18n "featured.heading" }}</h2>
+        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{{ i18n "featured.subtitle" }}</p>
       </div>
-      <a class="group inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400" href="{{ "/posts/" | relLangURL }}">更多文章<span class="ms-1 transition-transform group-hover:translate-x-0.5">→</span></a>
+      <a class="group inline-flex items-center text-sm font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400" href="{{ "/posts/" | relLangURL }}">{{ i18n "featured.more" }}<span class="ms-1 transition-transform group-hover:translate-x-0.5">→</span></a>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       {{ range $title := $featuredArticles }}
         {{ range first 1 (where site.RegularPages "Title" $title) }}
-          <article class="relative overflow-hidden rounded-lg border border-neutral-300 p-5 transition hover:border-primary-400 hover:shadow-sm dark:border-neutral-600">
-            <h3 class="text-lg font-bold leading-snug text-neutral-900 dark:text-neutral">
-              <a class="before:absolute before:inset-0 hover:underline hover:underline-offset-2" href="{{ .RelPermalink }}">
-                {{ .Title | emojify }}
-              </a>
-            </h3>
-            <div class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-              {{ partial "article-meta/basic.html" . }}
-            </div>
-            {{ with .Description }}
-              <p class="mt-3 line-clamp-3 text-sm leading-6 text-neutral-700 dark:text-neutral-300">{{ . | plainify }}</p>
-            {{ end }}
-          </article>
+          {{ partial "article-link/card.html" . }}
         {{ end }}
       {{ end }}
     </div>
