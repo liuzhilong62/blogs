@@ -1,0 +1,43 @@
+main:
+  - name: "Home"
+    pageRef: "/"
+    weight: 10
+  - name: "Cases"
+    pageRef: "categories/postgresql案例"
+    weight: 20
+  - name: "Internals"
+    pageRef: "categories/postgresql内功修炼"
+    weight: 30
+  - name: "Source"
+    pageRef: "categories/postgresql源码解析"
+    weight: 40
+  - name: "Papers"
+    pageRef: "categories/论文解读"
+    weight: 50
+  - name: "Notes"
+    pageRef: "categories/读书笔记"
+    weight: 60
+  - name: "About"
+    pageRef: "about"
+    weight: 70
+
+footer:
+  - name: "Home"
+    pageRef: "/"
+    weight: 10
+  - name: "Posts"
+    pageRef: "/posts/"
+    weight: 20
+  - name: "Categories"
+    pageRef: "/categories/"
+    weight: 30
+  - name: "Tags"
+    pageRef: "/tags/"
+    weight: 40
+  - name: "About"
+    pageRef: "/about/"
+    weight: 50
+  - name: "RSS"
+    url: "/en/index.xml"
+    pre: "rss"
+    weight: 60

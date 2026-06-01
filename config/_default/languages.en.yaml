@@ -1,0 +1,26 @@
+languageCode: "en-US"
+languageName: "English"
+weight: 2
+title: "The Last DBA"
+
+params:
+  displayName: "EN"
+  isoCode: "en-US"
+  rtl: false
+  dateFormat: "Jan 2, 2006"
+  description: "PostgreSQL DBA technical blog — internals, case studies, source code deep-dives, paper reviews"
+  copyright: "© { year } liuzhilong62"
+
+  author:
+    name: "liuzhilong62"
+    headline: "PostgreSQL DBA & Blogger"
+    bio: "PostgreSQL DBA. Writing about database internals, production cases, and source code analysis."
+    image: "img/avatar.jpg"
+    imageQuality: 96
+    links:
+      - github: "https://github.com/liuzhilong62"
+      - x-twitter: "https://x.com/liuzhilong62"
+      - email: "mailto:liuzhilong62@outlook.com"
+
+  license: "CC BY-NC-SA 4.0"
+  licenseURL: "https://creativecommons.org/licenses/by-nc-sa/4.0/"

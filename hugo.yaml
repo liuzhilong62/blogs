@@ -4,7 +4,6 @@
 baseURL: "https://lastdba.com/"
 theme: "blowfish"
 defaultContentLanguage: "zh"
-hasCJKLanguage: true
 enableRobotsTXT: true
 enableEmoji: true
 summaryLength: 80
