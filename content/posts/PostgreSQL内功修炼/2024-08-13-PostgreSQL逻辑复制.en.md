@@ -1147,4 +1147,3 @@ https://zhuanlan.zhihu.com/p/311496301
 http://pigsty.cc/zh/blog/2021/03/03/postgres逻辑复制详解/
 
 [Logical replication and logical decoding - Azure Database for PostgreSQL - Flexible Server | Microsoft Learn](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

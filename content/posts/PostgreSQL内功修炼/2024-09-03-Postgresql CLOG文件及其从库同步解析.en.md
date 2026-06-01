@@ -611,5 +611,3 @@ So, **the standby database's CLOG transaction ID status is synchronized by WAL w
 [^3]: "Quickly Mastering PostgreSQL Version New Features", p24
 
 
-> Original article: https://lastdba.com/2024/09/03/postgresql-clog文件及其从库同步解析/
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

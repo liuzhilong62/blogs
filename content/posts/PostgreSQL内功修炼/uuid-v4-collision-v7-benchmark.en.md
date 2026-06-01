@@ -125,4 +125,3 @@ What you really should think about is **index performance**. v7's temporal prope
 PG 18 will natively support `gen_uuid_v7()`. For now, generate UUIDs at the application layer. Whichever version you use, always add a UNIQUE constraint.
 
 *This article was originally published in Chinese on [lastdba.com](https://lastdba.com).*
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

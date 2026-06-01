@@ -42,4 +42,3 @@ I'd read a few English originals and clearly got a bit cocky — turns out I nee
 I'd been wanting to read psychology for a while. After reading it, I've learned I'm not cut out for it.
 Well, no matter what, I had to write this book note — recording my life, like Paul did.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

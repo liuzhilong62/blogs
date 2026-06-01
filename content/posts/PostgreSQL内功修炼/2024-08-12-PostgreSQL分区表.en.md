@@ -2151,4 +2151,3 @@ http://www.pgsql.tech/article_0_10000102
 
 https://brandur.org/fragments/postgres-partitioning-2022
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

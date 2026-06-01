@@ -440,4 +440,3 @@ With the 4 basic tables including pg_class, loading subsequent system table info
 [^2]: https://www.postgresql.org/docs/current/system-catalog-declarations.html
 [^3]: [PostgreSQL Memory Analysis](https://blog.csdn.net/qq_40687433/article/details/135541103)
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

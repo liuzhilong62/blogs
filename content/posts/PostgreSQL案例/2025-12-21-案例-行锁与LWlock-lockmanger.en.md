@@ -254,4 +254,3 @@ Solution:
 
 From the business side, the SQL was tied to a certain API endpoint: after being called, it updates the call count into the table. If the same endpoint is called repeatedly, it's possible to repeatedly update the same row. Therefore, reducing repeated calls to the same endpoint, or batching the database updates into fewer, larger batches, is expected to mitigate this problem.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

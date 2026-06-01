@@ -368,4 +368,3 @@ Logical replication is one of the most significant feature enhancements in recen
 
 Logical replication has a lot of depth. Recommended reading: [PG Inner Workings: Logical Replication](https://blog.csdn.net/qq_40687433/article/details/129291207)
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

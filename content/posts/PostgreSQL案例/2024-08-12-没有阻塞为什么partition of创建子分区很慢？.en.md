@@ -136,4 +136,3 @@ alter table LZLPARTITION1 attach partition LZLPARTITION1_202303 for values from 
 alter table lzlpartition1_202303 drop constraint  chk_202303;
 ```
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

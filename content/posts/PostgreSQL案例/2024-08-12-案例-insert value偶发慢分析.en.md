@@ -263,4 +263,3 @@ At minimum, the following optimizations can be made:
 1. Enable database group commit (can be deferred if concerned about risk; testing required)
 2. Batch multiple INSERT VALUES statements at the application level to reduce WALWriteLock contention
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

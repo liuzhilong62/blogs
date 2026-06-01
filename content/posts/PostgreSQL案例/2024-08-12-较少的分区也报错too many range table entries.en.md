@@ -379,4 +379,3 @@ And in the function that previously threw the error, `add_rte_to_flat_rtable()` 
  - The `too many range table entries` error is resolved in PG15.
  - For versions below 15, don't create too many partitions! You can also leverage partition pruning to reduce accessed partitions — in this case, simply adding a partition key condition to the WHERE clause would work.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

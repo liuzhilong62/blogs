@@ -100,4 +100,3 @@ OK, just some thoughts — might delete later.
 https://www.itsec.gov.cn/aqkkcp/cpgg/
 
 > Original link: https://lastdba.com/2026/05/29/xinchuang-db-2026-review/
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

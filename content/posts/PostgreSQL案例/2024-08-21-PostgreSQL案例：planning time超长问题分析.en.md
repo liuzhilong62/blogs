@@ -431,4 +431,3 @@ The replication link broke and the replication slot wasn't cleaned up in time, l
 
 The problem itself is simple — it was just the investigation that was convoluted. In short: bloat in the base table `pg_statistic` caused excessive data access during the plan generation phase. Metadata base table bloat can cause other tricky problems too — until next time.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

@@ -400,4 +400,3 @@ However, Oracle provides more tools to address this: extended statistics, Automa
 http://www.postgres.cn/v2/news/viewone/1/717
 https://oracle-base.com/articles/12c/automatic-column-group-detection-extended-statistics-12cr1
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

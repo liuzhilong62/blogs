@@ -1806,4 +1806,3 @@ References:
 
 （https://blog.csdn.net/Hehuyi_In/article/details/100715177?spm=1001.2014.3001.5501）
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

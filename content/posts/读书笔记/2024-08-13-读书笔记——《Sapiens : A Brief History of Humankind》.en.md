@@ -39,4 +39,3 @@ Retracing the development of human civilization lets us understand where we came
 
 I'd like to close with a quote from *Civilization VI*, a game I've played for over 400 hours: "From the first stirrings of life beneath the water... to the great beasts of the Stone Age... to man taking his first upright steps, you have come far. Now begins your greatest quest."
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

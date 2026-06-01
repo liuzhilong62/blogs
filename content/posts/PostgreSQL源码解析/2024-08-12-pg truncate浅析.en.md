@@ -535,4 +535,3 @@ https://pgpedia.info/t/truncate.html
 https://www.orafaq.com/wiki/SQL_FAQ
 https://learnsql.com/blog/difference-between-truncate-delete-and-drop-table-in-sql/
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

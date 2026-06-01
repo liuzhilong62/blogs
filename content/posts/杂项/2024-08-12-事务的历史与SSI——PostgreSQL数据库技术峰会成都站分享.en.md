@@ -233,4 +233,3 @@ Optimization Results — Request Volume and Failure Rate:
  - PostgreSQL is the first commercial database to implement SSI, while many traditional relational databases don't support serializability at all. PostgreSQL has taken a big step forward.
  - PostgreSQL not only implemented SSI but also made many optimizations on top of it, such as read-only transaction and memory optimizations, with significant results.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

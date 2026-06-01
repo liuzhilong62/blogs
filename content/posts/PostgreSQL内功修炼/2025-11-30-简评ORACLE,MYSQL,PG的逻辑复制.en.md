@@ -47,4 +47,3 @@ Disadvantages of the Oracle approach:
 - Relies on third-party software to manage replication links.
 
 In summary, PG's logical replication is an all-in-one, do-everything approach — very much in the open-source, technical spirit. MySQL's approach is simple, crude, but effective — somewhat "one-step-to-finish." Oracle's approach is: provide an interface and leave everything else to third parties, but from the customer's perspective, there is a mature solution available.
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

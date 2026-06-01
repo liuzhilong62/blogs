@@ -535,5 +535,3 @@ https://www.postgresql.org/docs/17/locale.html#LOCALE-PROVIDERS
 
 ---
 
-> Original article: [https://lastdba.com/2025/12/13/从collation-mismatch异常到其原理/](https://lastdba.com/2025/12/13/从collation-mismatch异常到其原理/)
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

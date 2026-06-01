@@ -3225,4 +3225,3 @@ https://mp.weixin.qq.com/s/j-8uRuZDRf4mHIQR_ZKIEg
 https://blog.csdn.net/postgrechina/article/details/49130743?spm=a2c6h.12873639.article-detail.7.41b32cda2KR1QM
 
 http://mysql.taobao.org/monthly/2018/12/02/
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

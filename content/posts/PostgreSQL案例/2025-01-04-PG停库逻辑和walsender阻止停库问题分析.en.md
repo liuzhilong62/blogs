@@ -1362,4 +1362,3 @@ checkpointer.c
 startup.c
 pgarch.c
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

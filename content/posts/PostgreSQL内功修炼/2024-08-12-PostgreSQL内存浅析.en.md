@@ -1222,5 +1222,3 @@ https://jnidzwetzki.github.io/2022/05/28/postgres-memory-context.html
 https://www.pgcon.org/2019/schedule/attachments/514_introduction-memory-contexts.pdf
 
 
-> Original article: https://lastdba.com/2024/08/12/postgresql内存浅析/
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

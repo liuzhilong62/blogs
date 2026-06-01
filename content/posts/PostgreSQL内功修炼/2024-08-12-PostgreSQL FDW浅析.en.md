@@ -618,4 +618,3 @@ https://dbaplus.cn/news-19-2090-1.html
 https://www.highgo.ca/2019/08/08/horizontal-scalability-with-sharding-in-postgresql-where-it-is-going-part-3-of-3/
 https://www.highgo.ca/2021/06/28/parallel-execution-of-postgres_fdw-scans-in-pg-14-important-step-forward-for-horizontal-scaling/
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

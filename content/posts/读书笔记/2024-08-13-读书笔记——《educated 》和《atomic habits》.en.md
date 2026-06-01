@@ -29,4 +29,3 @@ The Chinese title of *Educated* is *You Should Fly Like a Bird to Your Mountain*
 
 At last — these two books have had an enormous impact on me. One is a legendary autobiography; the other is a behavior-transforming book. Neither is the kind of work you forget shortly after reading. They're perfect starter books for cultivating a reading habit, especially for those wanting to read English originals. I really don't recommend *Pride and Prejudice* or *One Hundred Years of Solitude* — yes, they're classics, but their impact on the reader is quite low, and they were written so long ago that some vocabulary and grammar are too archaic, making them unsuitable for first-time English readers. Looking at this through the lens of *Atomic Habits*: reading these English classics is not only more difficult but also lacks immediate personal benefit, making it hard to form a habit.
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

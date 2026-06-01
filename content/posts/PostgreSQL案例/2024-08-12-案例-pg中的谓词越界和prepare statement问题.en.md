@@ -420,4 +420,3 @@ PreparedStatement preparedStatement =
 
 Finally, predicate out-of-bounds problems exist in essentially all databases, especially on time-based fields. There is currently no simple yet perfectly effective solution. Oracle's SPM (SQL Plan Management) gains another point in my favorability...
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*
