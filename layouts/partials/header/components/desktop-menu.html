@@ -5,6 +5,16 @@
     {{ end }}
   {{ end }}
 
+  {{ if .Site.Params.enableSearch | default false }}
+    <button
+      id="search-button"
+      aria-label="Search"
+      class="text-base bf-icon-color-hover"
+      title="{{ i18n "search.open_button_title" }}">
+      {{ partial "icon.html" "search" }}
+    </button>
+  {{ end }}
+
   <a
     href="https://x.com/liuzhilong62"
     target="_blank"
@@ -25,18 +35,9 @@
   </a>
 
   {{ partial "header/components/translations.html" . }}
+
   {{ if .Site.Params.enableA11y | default false }}
     {{ partial "header/components/a11y.html" (dict "prefix" "desktop-") }}
-  {{ end }}
-
-  {{ if .Site.Params.enableSearch | default false }}
-    <button
-      id="search-button"
-      aria-label="Search"
-      class="text-base bf-icon-color-hover"
-      title="{{ i18n "search.open_button_title" }}">
-      {{ partial "icon.html" "search" }}
-    </button>
   {{ end }}
 
   {{ if .Site.Params.footer.showAppearanceSwitcher | default false }}
