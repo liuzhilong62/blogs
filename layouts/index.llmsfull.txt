@@ -2,12 +2,12 @@
 # {{ .Site.Title }}
 
 > {{ .Site.Params.description | default "PostgreSQL DBA 技术博客" }}
-> 共 {{ len (where .Site.RegularPages "Section" "posts") }} 篇文章
+> 共 {{ len (where .RegularPages "Section" "posts") }} 篇文章
 > 生成时间：{{ now.Format "2006-01-02 15:04:05" }}
 
 ---
 
-{{- range (where .Site.RegularPages "Section" "posts") }}
+{{- range (where .RegularPages "Section" "posts") }}
 # {{ .Title }}
 
 {{- if .Description }}

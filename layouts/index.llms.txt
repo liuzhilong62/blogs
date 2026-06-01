@@ -6,7 +6,7 @@
 ## 关于
 
 lastdba.com 是 PostgreSQL DBA 的技术博客，内容涵盖数据库案例、
-内核机制、源码解析、论文解读和读书笔记。共 {{ len (where .Site.RegularPages "Section" "posts") }} 篇文章。
+内核机制、源码解析、论文解读和读书笔记。共 {{ len (where .RegularPages "Section" "posts") }} 篇文章。
 
 {{- $featured := .Site.Params.homepage.featuredArticles | default slice }}
 
@@ -20,7 +20,7 @@ lastdba.com 是 PostgreSQL DBA 的技术博客，内容涵盖数据库案例、
 
 ## 全部文章（按分类）
 
-{{- $posts := where .Site.RegularPages "Section" "posts" }}
+{{- $posts := where .RegularPages "Section" "posts" }}
 {{- range .Site.Taxonomies.categories }}
   {{- $cat := .Page.Title }}
 ### {{ $cat }}
