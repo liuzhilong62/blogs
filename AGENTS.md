@@ -10,7 +10,8 @@
 - **技术栈**: Hugo 0.161.1 + Blowfish 主题 (Git submodule)
 - **托管**: GitHub Pages + Cloudflare CDN (橙色云 🧡)
 - **本地编辑**: Typora (macOS) + PicGo (图片上传)
-- **内容**: 77+ 篇 PostgreSQL 技术文章，中文写作
+- **内容**: 80+ 篇 PostgreSQL 技术文章，中文写作
+- **多语言**: 2026-06 启用英文版 (lastdba.com/en/)。中文为默认语言，英文内容 `.en.md` 后缀
 - **目录**: `/Users/liuzhilong62/Documents/01-mygithub/blogs`
 
 ## 目录结构
