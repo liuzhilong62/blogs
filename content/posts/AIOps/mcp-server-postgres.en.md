@@ -25,7 +25,7 @@ These 70 slides can be cleanly split into two layers — the first half is theor
 
 The theory layer takes up nearly half the content, from LLM fundamentals to how MCP works. The outline is clear:
 
-![Talk outline: Generative AI → LLM limitations → RAG → MCP → MCP Server in practice](https://lastdba.com/img/mcp/outline.png)
+![Talk outline: Generative AI → LLM limitations → RAG → MCP → MCP Server in practice](/img/mcp/outline.png)
 
 ## RAG vs MCP: In One Sentence
 
@@ -41,11 +41,11 @@ Bruce sums it up in one sentence:
 
 Slides 18-33 are the core of the theory layer. Bruce draws a detailed internal Transformer flow diagram:
 
-![MCP Server registered as Tool Embedding Vectors in the vector space](https://lastdba.com/img/mcp/mcp-servers.png)
+![MCP Server registered as Tool Embedding Vectors in the vector space](/img/mcp/mcp-servers.png)
 
 His logic: take each MCP tool's description text (e.g., "Return the radiation level (CPM) at 13 Roberts Road..."), embed it into a vector using a text embedding model, and inject it into the attention layer's vector space. Then at each inference step, the output vector matches against the nearest vector —
 
-![The closest vector might be a text token, or an MCP tool](https://lastdba.com/img/mcp/word-or-mcp.png)
+![The closest vector might be a text token, or an MCP tool](/img/mcp/word-or-mcp.png)
 
 > "The closest vector might be a word or an MCP."
 
@@ -75,13 +75,13 @@ The only thread connecting the two layers is that "they're both talking about MC
 
 Bruce set up a GQ GMC-800 Geiger counter (radiation detector) in his backyard, connected via USB to a Raspberry Pi, taking environmental radiation readings every 15 minutes. First, see ChatGPT using MCP to call real data:
 
-![ChatGPT querying weather via MCP](https://lastdba.com/img/mcp/chatgpt-weather.png)
+![ChatGPT querying weather via MCP](/img/mcp/chatgpt-weather.png)
 
 MCP can call external tools to get real-time data — something RAG cannot do.
 
 Connected to hardware:
 
-![GQ GMC-800 Geiger counter](https://lastdba.com/img/mcp/geiger-counter.png)
+![GQ GMC-800 Geiger counter](/img/mcp/geiger-counter.png)
 
 Wrote a Python wrapper using **fastmcp**:
 

@@ -107,9 +107,9 @@ CREATE TABLE uuid_v7_test (id UUID PRIMARY KEY, payload TEXT);
 
 #### Why Such a Big Difference
 
-![UUID v4 bit structure](../../../static/img/uuid-v4-structure.png)
+![UUID v4 bit structure](/img/uuid-v4-structure.png)
 
-![UUID v7 bit structure](../../../static/img/uuid-v7-structure.png)
+![UUID v7 bit structure](/img/uuid-v7-structure.png)
 
 
 UUID v4 is fully random. Newly inserted UUIDs scatter randomly across the B-tree index, causing massive page splits and severe index fragmentation. UUID v7 has a millisecond-precision timestamp in the first 48 bits, so newly generated UUIDs are naturally ordered — writes cluster on the right side of the B-tree, page splits drop dramatically, and the index is much more compact.
