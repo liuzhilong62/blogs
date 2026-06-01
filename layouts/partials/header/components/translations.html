@@ -8,8 +8,7 @@
           class="flex items-center bf-icon-color-hover"
           aria-label="{{ .Language.LanguageName }}"
           title="{{ .Language.LanguageName }}">
-          <span class="me-1">{{ partial "icon.html" "language" }}</span>
-          <span class="text-sm font-medium">{{ .Language.Params.displayName | emojify }}</span>
+          {{ partial "icon.html" "language" }}
         </a>
       {{ end }}
     {{ end }}
