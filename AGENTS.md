@@ -20,9 +20,11 @@
 blogs/
 ├── hugo.yaml                  # 核心 Hugo 配置
 ├── config/_default/
-│   ├── params.yaml            # Blowfish 主题参数
-│   ├── languages.zh.yaml      # 中文语言配置 + 作者信息 + 社交链接
-│   └── menus.zh.yaml          # 导航菜单 (flat, 无 dropdown)
+│   ├── params.yaml            # Blowfish 主题参数（共享）
+│   ├── languages.zh.yaml      # 中文语言配置 + 精选文章 + 社交链接
+│   ├── languages.en.yaml      # 英文语言配置 + 精选文章 + 社交链接
+│   ├── menus.zh.yaml          # 中文导航菜单
+│   └── menus.en.yaml          # 英文导航菜单
 ├── content/
 │   ├── _index.md              # 首页 (profile layout + 统计短代码)
 │   ├── about/index.md         # 关于页
@@ -111,6 +113,7 @@ hugo --quiet && git add -A && git commit -m "post: 标题" && git push
 - `categories` 和 `tags` 保留中文（Hugo taxonomy，跨语言共享）
 - 代码块、SQL、图片路径中英文版本完全一致，不要改动
 - 英文文章末尾加 `*Originally published in Chinese on [lastdba.com](https://lastdba.com).*`
+- **精选文章 (featured)**: 配置在 `languages.zh.yaml` / `languages.en.yaml` 的 `params.homepage.featuredArticles`，**不在**共享 `params.yaml` 中。中英文各写各的标题，保持两边文章对应一致。Hugo 按语言自动选用对应列表。
 
 ## 写文章工作流
 
@@ -210,6 +213,7 @@ showHero: false
 - `article.showWordCount: true` — 显示字数 (中文不准但大致可用)
 - `footer.showLicense: true` — 底部显示 CC BY-NC-SA 4.0
 - `footer.showThemeAttribution: false` — 不显示 Blowfish 版权
+- `featuredArticles` **不在此文件** — 精选文章列表已移至各语言 config（`languages.zh.yaml` / `languages.en.yaml`），确保中英文各用自己的标题
 
 ## 自定义 Layout 清单
 
