@@ -71,6 +71,47 @@ hugo --quiet && git add -A && git commit -m "描述" && git push
 
 **push 即部署**: GitHub Actions 自动触发 hugo.yml, ~1 分钟后刷新到 lastdba.com。
 
+## 多语言发布工作流 (Multilingual Publishing)
+
+博客支持中英双语。中文为默认语言，英文内容使用 `.en.md` 后缀。
+
+### 写新文章时同时发布中英文
+
+```bash
+# 1. 创建中文文章
+hugo new posts/分类目录/slug.md
+# 编辑中文内容...
+
+# 2. 在同目录创建英文翻译（注意 .en.md 后缀）
+cat > content/posts/分类目录/slug.en.md
+# 编辑英文内容...
+
+# 3. 构建 + 提交
+hugo --quiet && git add -A && git commit -m "post: 标题" && git push
+```
+
+### 翻译已有中文文章
+
+```bash
+# 中文原文: content/posts/分类/文章.md
+# 创建翻译: content/posts/分类/文章.en.md
+# Hugo 通过文件名 stem 自动关联两个版本
+```
+
+### 验证发布结果
+
+- **中文**: https://lastdba.com/2026/06/01/slug/
+- **英文**: https://lastdba.com/en/2026/06/01/slug/
+- **llms.txt 中文**: https://lastdba.com/llms.txt（81 篇）
+- **llms.txt 英文**: https://lastdba.com/en/llms.txt（63 篇）
+
+### 注意事项
+
+- 中文 frontmatter 和英文 frontmatter 各写各的（title/description 各自语言）
+- `categories` 和 `tags` 保留中文（Hugo taxonomy，跨语言共享）
+- 代码块、SQL、图片路径中英文版本完全一致，不要改动
+- 英文文章末尾加 `*Originally published in Chinese on [lastdba.com](https://lastdba.com).*`
+
 ## 写文章工作流
 
 ### 1. 创建文章
