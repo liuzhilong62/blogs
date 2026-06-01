@@ -5,7 +5,7 @@
       {{ if ne .Lang $.Lang }}
         <a
           href="{{ .RelPermalink }}"
-          class="flex items-center bf-icon-color-hover"
+          class="text-base flex items-center bf-icon-color-hover"
           aria-label="{{ .Language.LanguageName }}"
           title="{{ .Language.LanguageName }}">
           {{ partial "icon.html" "language" }}
