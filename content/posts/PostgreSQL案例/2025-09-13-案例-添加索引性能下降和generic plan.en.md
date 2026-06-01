@@ -352,3 +352,4 @@ explain (GENERIC_PLAN) xx
 ```
 
 > Original article: https://lastdba.com/2025/09/13/案例-添加索引性能下降和generic-plan/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

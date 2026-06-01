@@ -5,8 +5,6 @@ categories: [PostgreSQL内功修炼]
 description: "A comprehensive guide to PostgreSQL declarative partitioning, partition maintenance strategies, and query optimization techniques."
 ---
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*
-
 ## What is a Partitioned Table
 
 ![Postgres Table Partitioning](/img/csdn/787a5ce076e9.png)
@@ -20,7 +18,7 @@ PostgreSQL provides various partition implementation approaches. The officially 
 
 ### Declarative Partitioning
 
-声明分区也叫原生分区，从PG10版本开始支持，相当于“官方支持”的分区表，也是最为推荐的分区方式。虽然与继承分区不一样，但是其内部也是用继承表实现的。声明分区只支持3种分区方式：range分区、list分区、hash分区
+Declarative partitioning, also called native partitioning, has been supported since PG10. It is the "officially supported" partitioning approach and the most recommended method. Although different from inheritance partitioning, declarative partitioning is also implemented internally using table inheritance. It supports only three partition methods: RANGE, LIST, and HASH.
 
 #### RANGE Partitioning
 
@@ -47,7 +45,7 @@ create table LZLPARTITION1_202302 partition of LZLPARTITION1 for values from ('2
 ```
 
 ```sql
---往分区表添加一些数据
+-- Insert some data into the partitioned table
 => INSERT INTO lzlpartition1  SELECT random() * 10000, md5(g::text),g 
 FROM generate_series('2023-01-01'::date, '2023-02-28'::date, '1 minute') as g;
 INSERT 0 83521
@@ -142,7 +140,7 @@ CREATE TABLE orders_p3 PARTITION OF orders
     FOR VALUES WITH (MODULUS 3, REMAINDER 2);
 ```
 
-You cannot create a default partition for HASH, nor can you create more partitions than the specified MODULUS.
+You cannot create a default partition, nor can you create more partitions than the specified MODULUS.
 
 ```sql
 => CREATE TABLE orders_p2 PARTITION OF orders
@@ -180,17 +178,17 @@ INSERT 0 10000
  orders_p1 |       20 | a
 ```
 
-HASH partition data is distributed across partitions:
+HASH partition data is distributed evenly across partitions:
 
 ```sql
---插入100条null数据
+-- Insert 100 NULL rows
 => insert into orders values(null,generate_series(1,100)::text);
 INSERT 0 100
 =>  SELECT tableoid::regclass,count(*) FROM orders where order_id is null group by tableoid::regclass;
  tableoid  | count 
 -----------+-------
  orders_p1 |   100
---null数据全部都放在了remainder 0的分区上
+-- All NULL data ends up on the remainder 0 partition
 =>\d+ orders_p1
                                          Table "public.orders_p1"
   Column  |         Type          | Collation | Nullable | Default | Storage  | Stats target | Description 
@@ -201,13 +199,13 @@ Partition of: orders FOR VALUES WITH (modulus 3, remainder 0)
 Partition constraint: satisfies_hash_partition('412053'::oid, 3, 0, order_id)
 ```
 
-HASH partitioned tables do not have the concept of a NULL partition, but they can store NULL data. NULL values are stored in the partition with REMAINDER 0.
+Although HASH partitioned tables have no concept of a NULL partition, they can store NULL data. NULL values are placed on the remainder 0 partition.
 
-#### Sub-partitioning (Multi-level Partitioning)
+#### Multi-level (Mixed) Partitioning
 
-Partitions can themselves be further partitioned in a cascading manner, and sub-partitions can use different partitioning strategies. This is called sub-partitioning or multi-level partitioning.
+Partitions can themselves be further partitioned, forming a cascading structure. Sub-partitions can use different partition methods — this is called mixed partitioning.
 ![](/img/csdn/220e4e6f1544.png)
-Create a sub-partitioned table:
+Creating a mixed partition:
 
 ```sql
 create table part_1000(id bigserial not null,name varchar(10),createddate timestamp) partition by range(createddate);
@@ -219,7 +217,7 @@ create table part_3002 partition of part_2001 FOR VALUES IN ('def');
 create table part_3003 partition of part_2001 FOR VALUES IN ('jkl');
 ```
 
-\d+ only shows partitions at the next level:
+\d+ only shows the immediate next-level partitions:
 
 ```sql
  \d+ part_1000
@@ -259,19 +257,19 @@ INSERT 0 1
  part_3001 | 6385 | abc  | 2023-01-01 08:00:00
 ```
 
-Data is stored in the leaf sub-partitions.
+Data is stored in the lowest-level sub-partition.
 
-#### Summary of Declarative Partitioning Features
+#### Declarative Partitioning Feature Summary
 
-- - **No INTERVAL partitioning**. There is no built-in automatic partition creation feature, which makes maintenance more challenging.
-- - **Partitions are themselves tables**, which is a unique characteristic. This not only allows flexible manipulation of sub-partitions but also has important implications for features and behavior.
-- - TRUNCATE, VACUUM, and ANALYZE on a partitioned table will execute on all partitions. TRUNCATE ONLY cannot be executed on the parent table, but can be executed on a child partition containing data to clear only that partition.
-- - RANGE and HASH partitioning keys can consist of multiple columns; LIST partitioning keys can only be a single column or expression.
-- - The partition parent table is empty; leaf sub-partitions store the actual data.
-- - The DEFAULT partition receives data that does not fall into any declared range. Without a DEFAULT partition, inserting data outside the defined ranges will raise an error.
-- - When adding a new partition, check whether the DEFAULT partition contains data that belongs to the new partition.
-- - Partitions created via PARTITION OF automatically create indexes, constraints, and row-level triggers from the parent table.
-- - ATTACH does not handle any indexes, constraints, or other objects.
+- **No INTERVAL partitioning**. There is no built-in automatic partition creation feature, which makes maintenance more cumbersome.
+- **Partitions themselves are tables**. This is a distinctive characteristic. This not only allows PostgreSQL to flexibly operate on sub-partitions but, more importantly, affects functionality and behavior.
+- TRUNCATE, VACUUM, and ANALYZE on a partitioned table operate on all partitions. TRUNCATE ONLY cannot be executed on the parent table but can be executed on a child table containing data, clearing only that sub-partition.
+- RANGE and HASH partition keys can have multiple columns; LIST partition keys can only be a single column or expression.
+- The partitioned parent table itself is empty; only the lowest-level sub-partitions contain data.
+- A DEFAULT partition receives data that falls outside declared ranges. Without a DEFAULT partition, inserting out-of-range data will raise an error.
+- When adding a new partition, check whether the DEFAULT partition contains data belonging to the new partition.
+- Partitions created via PARTITION OF automatically create indexes, constraints, and row-level triggers from the parent table.
+- ATTACH does not handle any indexes, constraints, or other objects.
 
 
 ### Inheritance Partitioning
@@ -304,7 +302,7 @@ CREATE TABLE measurement_202309 (
 ) INHERITS (measurement);
 ```
 
-**3.创建规则或触发器，将Insert data:重定向到对应的继承表中**
+**3. Create rules or triggers to redirect inserted data to the corresponding child tables**
 
 ```sql
 CREATE OR REPLACE FUNCTION measurement_insert_trigger()
@@ -352,15 +350,15 @@ Access method: heap
 Test insertion and querying:
 
 ```sql
---插入范围外的数据会报错
+-- Inserting data outside the defined range raises an error
 => insert into measurement values(1001, now() - interval '31' day  ,1,1);
 ERROR:  P0001: Date out of range.  Fix the measurement_insert_trigger() function!
 CONTEXT:  PL/pgSQL function measurement_insert_trigger() line 10 at RAISE
 LOCATION:  exec_stmt_raise, pl_exec.c:3889
---Insert data:会重定向到子表上
+-- Inserting data is redirected to the child table
 => insert into measurement values(1001,now(),1,1);
 INSERT 0 0
---查询父表会查到子表数据
+-- Querying the parent table returns data from child tables
 => select tableoid::regclass,* from measurement;
       tableoid      | city_id |  logdate   | peaktemp | unitsales 
 --------------------+---------+------------+----------+-----------
@@ -402,7 +400,7 @@ CREATE INDEX idx_measurement_202309_logdate ON measurement_202309 (logdate);
 Insert some data and check the execution plan:
 
 ```sql
---'2023-08-04'只有1条数据，让其可以走到索引
+-- '2023-08-04' has only 1 row, allowing it to use the index
 =>  insert into measurement values(1001,now()+interval '1' day,1,1);
 INSERT 0 0
  insert into orders values(generate_series(1,10000),'a');
@@ -423,21 +421,21 @@ In the above execution plan, the August partition uses the index on the partitio
 
 #### constraint_exclusion
 
-constraint_exclusion拥有控制优化器是否使用约束来减少非必要的访问表，该参数在继承分区表优化上常见，通过减少子表的访问，提升SQL的性能（该功能跟enable_partition_pruning参数类似，enable_partition_pruning用于控制声明式分区表的分区裁剪）。constraint_exclusion有3个值：
-`on`：所有表都会检查约束
-`partition`：继承表和UNION ALL子查询检查约束（默认值）
-`off`：不会检查约束
-约束排除只能发生在生成执行计划时，不会发生在真正执行时（分区裁剪是可以的）。这意味着当使用绑定变量、变量值时不会发生约束排除。
-例如在使用now()等优化器不知道具体值的函数时，优化器无法排除根本不需要访问的分区：
+constraint_exclusion controls whether the optimizer uses constraints to reduce unnecessary table access. This parameter is commonly used in inheritance partitioning optimization — by reducing child table access, it improves SQL performance. (This functionality is similar to the enable_partition_pruning parameter, which controls partition pruning for declarative partitioned tables.) constraint_exclusion has three values:
+`on`: All tables are checked for constraints.
+`partition`: Inheritance tables and UNION ALL subqueries are checked for constraints (default).
+`off`: Constraints are not checked.
+Constraint exclusion only occurs during execution plan generation, not during actual execution (partition pruning can occur during execution). This means constraint exclusion does not happen when using bound parameters or variable values.
+For example, when using functions like now() whose specific value the optimizer cannot determine, the optimizer cannot exclude partitions that don't need to be accessed at all:
 
 ```sql
 => select now();
               now              
 -------------------------------
  2023-08-03 17:12:04.772658+08
---优化器没有排除9月的分区
+-- The optimizer did not exclude the September partition
 =>  explain select * from measurement where logdate<=now();
-                                             QUERY PLAN                                              
+                                             QUERY PLAN                                             
 -----------------------------------------------------------------------------------------------------
  Append  (cost=0.00..55.98 rows=1628 width=16)
    ->  Seq Scan on measurement measurement_1  (cost=0.00..0.00 rows=1 width=16)
@@ -450,18 +448,18 @@ constraint_exclusion拥有控制优化器是否使用约束来减少非必要的
                Index Cond: (logdate <= now())
 ```
 
-另外，约束排除本身需要检查所有子表的约束，如果子表约束过多生成执行计划的效率会受到影响，所以继承分区不建议创建过多的子分区。
+Additionally, constraint exclusion itself needs to check all child table constraints. If there are too many child table constraints, the efficiency of generating execution plans will be affected. Therefore, inheritance partitioning is not recommended for creating too many child partitions.
 
 
 #### Adding/Removing Partitions in Inheritance Partitioning
 
-将一个继承分区做成普通表
+To turn an inherited partition into a regular table:
 
 ```sql
 ALTER TABLE measurement_202308 NO INHERIT measurement;
 ```
 
-将一个含有数据的普通表当成子表加入到继承分区表中
+To add an existing regular table (with data) as a child table in the inheritance partition:
 
 ```sql
 CREATE TABLE measurement_202310 
@@ -472,55 +470,55 @@ CHECK ( logdate >= DATE '2023-10-01' AND logdate < DATE '2023-11-01' );
 ALTER TABLE measurement_202310 INHERIT measurement;
 ```
 
-#### Inheritance Partitioning特性小结
+#### Inheritance Partitioning Feature Summary
 
- - 继承分区要比声明分区更灵活，但一些声明分区的特性也无法使用
-- 子表会继承父表上的约束，所以如果不是全局约束不要在父表上设置
-- 索引不会继承，索引只能在子表上一个个地创建
- - 声明分区只能有range、list、hash分区，继承分区可以更多，也可以是自定义的分区方式。
- - 删除一个子表不会导致触发器失效。PGSQL没有像ORACLE那样失效对象的概念（索引有失效的概念）
- - 一般来说使用trigger的插入重定向比rule效率更好
- - 新增分区时，如果触发器函数中没有该分区的规则，则需要更新触发器函数。
- - 继承分区可以多重继承
- - 约束排除不能在执行时进行排除，所以建议使用固定值进行查询
- - 使用继承分区表时，同样不要创建太多的子分区
+ - Inheritance partitioning is more flexible than declarative partitioning, but some declarative partitioning features are unavailable.
+- Child tables inherit parent table constraints, so global constraints should not be set on the parent table.
+- Indexes are not inherited; they must be created individually on each child table.
+ - Declarative partitioning only supports RANGE, LIST, and HASH partitions. Inheritance partitioning can support more, including custom partitioning methods.
+ - Dropping a child table does not invalidate the trigger. PostgreSQL does not have Oracle's concept of invalidated objects (indexes do have an invalidation concept).
+ - Generally, using triggers for insert redirection is more efficient than rules.
+ - When adding a new partition, if the trigger function lacks a rule for that partition, the trigger function needs to be updated.
+ - Inheritance partitioning supports multiple inheritance.
+ - Constraint exclusion cannot occur during execution; using fixed values for queries is recommended.
+ - With inheritance partitioning, avoid creating too many child partitions.
 
 ### pg_pathman
 
-pg_pathman是三方插件实现的分区表功能。[github上的pathman readme](https://github.com/postgrespro/pg_pathman)和[使用pg_pathman插件的文章](https://developer.aliyun.com/article/62314)对pathman描述和使用已经非常详细，这里仅摘几个重点汇总和做一些简单的测试。
+pg_pathman is a third-party plugin implementing partitioning functionality. The [pg_pathman README on GitHub](https://github.com/postgrespro/pg_pathman) and [articles on using pg_pathman](https://developer.aliyun.com/article/62314) already describe pathman in great detail. Here we only highlight key points and do some simple testing.
 
 #### pg_pathman Basics
 
-**不再更新**
+**No Longer Maintained**
 
 >  NOTE: this project is not under development anymore
 
-pg_pathman支持postgres9.5到15，PostgreSQL后续版本不会再支持，已有版本也只做BUG修复，不会再新增功能。
-pg_pathman的出现是因为老版本的PostgreSQL分区表功能不完善，而现在原生分区表（也就是声明分区表）已非常成熟，pg_pathman也建议使用原生分区表，存量的pg_pathman分区表也建议转移到原生分区表。曾经被许多用户认可的pg_pathman成为历史，即使不再更新，它的功能也比目前的原生分区表更多。
-**特性介绍**
-pg_pathman功能相当强大，一些原生分区表不支持的功能pathman也支持。 pathman虽然强大但也不是完美的，在实际使用过程中问题也很多。pg_pathman特性中比较需要关注的点包括：
+pg_pathman supports PostgreSQL 9.5 through 15. Later PostgreSQL versions are no longer supported, and existing versions only receive bug fixes — no new features will be added.
+pg_pathman emerged because older PostgreSQL versions had incomplete partitioning features. Now that native partitioned tables (declarative partitioning) are very mature, pg_pathman also recommends using native partitioned tables. Existing pg_pathman partitioned tables are also recommended to be migrated to native partitioned tables. pg_pathman, once recognized by many users, is now history. Even though it's no longer updated, its feature set is still richer than the current native partitioned tables.
+**Feature Highlights**
+pg_pathman is quite powerful, supporting some features that native partitioned tables do not. However, pathman is not perfect either and has many issues in practice. Key points to note about pg_pathman include:
 
- - pg_pathman可以通过分区管理函数管理分区。支持replace、merge、split分区操作；支持 attach、detach操作；支持interval分区
- - pg_pathman对分区表执行计划做了很多优化
- - pg_pathman仅支持range和hash两种分区类型
- - pathman_config表存储分区表配置信息；提供分区任务视图
- - 分区信息缓存在内存中，以生成执行计划
+ - pg_pathman can manage partitions through partition management functions. It supports replace, merge, split partition operations; attach and detach operations; and INTERVAL partitioning.
+ - pg_pathman has many optimizations for partitioned table execution plans.
+ - pg_pathman only supports RANGE and HASH partition types.
+ - The pathman_config table stores partition configuration information; it provides partition task views.
+ - Partition information is cached in memory for execution plan generation.
 
- ### pg_pathman Basic Usage
+ ### Basic pg_pathman Usage
 
-**创建pathman range分区**
+**Creating pathman RANGE partitions**
 
 ```sql
---普通表就是父表
+-- The regular table serves as the parent table
 CREATE TABLE journal (
     id      SERIAL,
     dt      TIMESTAMP NOT NULL,
     level   INTEGER,
     msg     TEXT);
 
--- 子分区会自动创建父表上的索引
+-- Indexes on the parent table are automatically created on child partitions
 CREATE INDEX ON journal(dt);
---创建分区
+-- Create partitions
 select                                             
 create_range_partitions('journal'::regclass, 
                         'dt',
@@ -531,7 +529,7 @@ create_range_partitions('journal'::regclass,
 ```
 
 ```sql
---查看表定义
+-- View table definition
 => \d+ journal
                                                           Table "public.journal"
  Column |            Type             | Collation | Nullable |               Default               | Storage  | Stats target | Description 
@@ -567,17 +565,17 @@ Access method: heap
 ```
 
 ```sql
---Insert data:
+-- Insert data
 INSERT INTO journal (dt, level, msg)
 SELECT g, random() * 10000, md5(g::text)
 FROM generate_series('2023-01-01'::date, '2023-02-28'::date, '1 hour') as g;
 ```
 
 ```sql
---插入还未创建对应分区的数据
+-- Insert data for which no corresponding partition has been created yet
 =>  INSERT INTO journal (dt, level, msg) values('2023-07-01'::date,'11','1');
 INSERT 0 1
---查看分区数据分布，已成功创建interval分区
+-- Check partition data distribution; the INTERVAL partition has been automatically created
 => SELECT tableoid::regclass AS partition, count(*) FROM journal group by partition;
  partition | count 
 -----------+-------
@@ -587,10 +585,10 @@ INSERT 0 1
 ```
 
 ```sql
---查看执行计划
---已发生分区裁剪
+-- View execution plan
+-- Partition pruning has occurred
 => explain select * from journal where dt='2023-01-01 22:00:00';
-                                             QUERY PLAN                                              
+                                             QUERY PLAN                                             
 -----------------------------------------------------------------------------------------------------
  Append  (cost=0.00..5.30 rows=2 width=48)
    ->  Seq Scan on journal journal_1  (cost=0.00..0.00 rows=1 width=48)
@@ -599,20 +597,20 @@ INSERT 0 1
          Index Cond: (dt = '2023-01-01 22:00:00'::timestamp without time zone)
 ```
 
-**创建pathman hash分区**
+**Creating pathman HASH partitions**
 
 ```sql
---创建主表
+-- Create parent table
 CREATE TABLE items (
     id       SERIAL PRIMARY KEY,
     name     TEXT,
     code     BIGINT);
---创建hash分区
+-- Create HASH partitions
 select create_hash_partitions('items'::regclass, 
                         'id',
                         3, 
                         false) ; 
---Insert data:                       
+-- Insert data                       
 INSERT INTO items (id, name, code)
 SELECT g, md5(g::text), random() * 100000
 FROM generate_series(1, 1000) as g;
@@ -665,46 +663,47 @@ Access method: heap
 
 ### Advantages of Partitioned Tables
 
-- SQL性能提升。在某些场景下，比如把大量的数据分成多个分区，而SQL只需要查那一个分区的数据时，SQL性能可能会极大的提升
-- 分区可以和索引配合使用。比如访问一个分区上的一个索引要比访问一个未分区的大索引要更高效。
-- 删除一个分区比删除多行数据更高效。这在时间范围分区中很常见，删除一个用不到的历史分区是非常快的，但是如果没有分区，delete删除数据不仅慢还需要额外的维护操作
-- vacuum更快。一个大表在回收旧版本信息或收集统计信息时会非常慢，在vacuum还没执行完的时候可能SQL已经存在问题了。如果有分区的话，vacuum会快很多。
-- IO分散能力。不同的分区可以放在不同的路径、不同的磁盘上。极少使用数据可以放在便宜的磁盘上。
-- 更多的维护技巧。直接维护一个大表是非常困难的，比如一个极大的表做vacuum时就有很多问题，而分区表的各个分区可以单独运行vacuum。不仅如此，attach/detach、本地索引/约束等可以在很多场景中灵活使用。
+- SQL performance improvement. In certain scenarios, such as splitting a large amount of data into multiple partitions where SQL only needs to query one partition, SQL performance can be dramatically improved.
+- Partitions can work together with indexes. For example, accessing an index on a single partition is more efficient than accessing a large unpartitioned index.
+- Dropping a single partition is much more efficient than deleting many rows. This is common in time-range partitioning — dropping an unused historical partition is very fast, but without partitioning, DELETE operations are not only slow but also require additional maintenance.
+- VACUUM is faster. Reclaiming old version information or collecting statistics on a large table is very slow. If VACUUM hasn't finished executing, SQL may already be experiencing problems. With partitioning, VACUUM becomes much faster.
+- I/O distribution capability. Different partitions can be placed on different paths or different disks. Rarely-used data can be placed on cheaper disks.
+- More maintenance techniques. Directly maintaining a very large table is difficult — for example, VACUUM on an extremely large table has many issues. With partitioned tables, each partition can run VACUUM independently. Moreover, ATTACH/DETACH, local indexes/constraints, and more can be flexibly used in many scenarios.
 
 
 ### Disadvantages of Partitioned Tables
 
 
-- 在pgsql中，每个分区表的分区都可以当成普通表来对待。分区表过多会导致SQL解析时间较长和更多的内存负载，甚至报错。参考之前的文章[较少的分区也报错too many range table entries](https://editor.csdn.net/md/?articleId=131497779)
-- 即使分区过多没有报错，且在生成执行计划的时候没有做分区剪裁（执行的时候有可能做），那么explain出来的执行计划会非常多，此时日志中也会打印长长的执行计划影响日志阅读。
-- 一些奇怪的问题：[不同用户查看到不同的执行计划](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
+- In PostgreSQL, every partition of a partitioned table can be treated as a regular table. Too many partitions can lead to longer SQL parsing times and higher memory load, even causing errors. See the previous article: [Too many range table entries even with a modest number of partitions](https://editor.csdn.net/md/?articleId=131497779)
+- Even if having too many partitions doesn't cause errors, and partition pruning doesn't happen during execution plan generation (it might happen during execution), the EXPLAIN output will be extremely long. At that point, the logs will also contain lengthy execution plans, affecting log readability.
+- Some strange issues: [Different users see different execution plans](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
 
 
 ### Limitations of Partitioned Tables
 
-- **没有原生的自动创建分区功能**
-- **只支持分区索引，不支持全局索引**
-- **主键必须包含分区键。postgresql目前只能在各自的分区内判断唯一性，所以有这个限制。oracle和mysql都没有这种限制。**
+- **No native automatic partition creation feature**
+- **Only local partition indexes are supported; global indexes are not supported**
+- **Primary keys must include the partition key. PostgreSQL currently can only enforce uniqueness within each partition, hence this limitation. Oracle and MySQL do not have this restriction.**
 
-- **唯一索引必须包含分区键。postgresql目前只能在各自的分区内判断唯一性。同理主键**
-- **无法创建定义在全局的约束**
-- INSERT的BEFORE ROW触发器不能更新insert的那个分区
-- 临时表分区和普通表分区不能在同一分区表下。
-- 声明式分区的父表子表的列必须一致；继承式分区的子表可以比父表的列更多。
-- 声明式分区CHECK和NOT NULL约束总是继承的，不能单独设置分区的这两种约束
-- range 不能存储NULL值；hash分区没有null分区的概念，但可以存储null值，null值存放在remainder 0分区上；list分区可以显示创建null分区存放null数据
-
-
+- **Unique indexes must include the partition key. PostgreSQL currently can only enforce uniqueness within each partition. Same applies to primary keys.**
+- **Cannot create globally-defined constraints**
+- BEFORE ROW INSERT triggers cannot update the partition into which the row is being inserted.
+- Temporary table partitions and regular table partitions cannot coexist under the same partitioned table.
+- In declarative partitioning, parent and child table columns must be identical; in inheritance partitioning, child tables can have more columns than the parent table.
+- In declarative partitioning, CHECK and NOT NULL constraints are always inherited; these two constraints cannot be set independently on individual partitions.
+- RANGE partitions cannot store NULL values. HASH partitions have no concept of NULL partitions but can store NULL values — they are placed on the remainder 0 partition. LIST partitions can explicitly create a NULL partition to store NULL data.
 
 
-### 什么时候该使用分区表？
 
-首先使用分区表必须要了解分区表所带来的优劣势和使用限制，比如数据量很大的时候分区可以带来性能提升，冷热数据分离也更好管理分区数据等等。应该结合本身业务情况、硬件资源选择是否分区和如何分区。但是总会有开发人员会问到底多少数据量该分区等等的问题，使用分区表的建议只能给出一个笼统的回答，如果你不知道怎么分区，可以参考以下建议（如果足够了解表分区，请忽略）：
 
-- 表数据够大，而表上的sql总是或可以是带有分区键字段的时候
-- 冷热数据分离明显。比如新数据都在新的当月分区插入，老的11个月分区都是只读数据的情况
-- vaccum已经跑不过来了
+### When Should You Use Partitioned Tables?
+
+
+First, to use partitioned tables you must understand the advantages, disadvantages, and limitations they bring. For example, when data volume is large, partitioning can improve performance; hot/cold data separation also makes partition data management easier. You should decide whether to partition and how to partition based on your specific business situation and hardware resources. However, developers will always ask questions like "how much data warrants partitioning." Advice on using partitioned tables can only be given in general terms. If you don't know how to partition, you can refer to the following recommendations (if you already have sufficient understanding of table partitioning, please ignore):
+
+- The table data is large enough, and SQL queries on the table always or can include the partition key column.
+- Clear hot/cold data separation. For example, new data is always inserted into the current month's partition, while the other 11 months of old partitions are read-only.
+- VACUUM can no longer keep up.
 
 
 
@@ -713,42 +712,42 @@ Access method: heap
 
 ## Partition Table Permissions
 
-权限问题是分区表知识点中讨论的比较少的，但是它仍然值得关注。
-由于PostgreSQL数据库有“分区子表也是普通表”这样的概念，这与其他几个常见的数据库（Oracle、mysql）是不同的。比如在oracle中不需要关心分区子表的权限，但是在pg中却需要关注权限问题。
+Permission issues are less discussed in the context of partitioned table knowledge, but they are still worth paying attention to.
+Because PostgreSQL has the concept that "partition child tables are also regular tables," this differs from other common databases (Oracle, MySQL). For example, in Oracle you don't need to worry about partition child table permissions, but in PostgreSQL you do.
 
-partition of/attach不会将主表的权限继承给子表
+PARTITION OF / ATTACH do not inherit the parent table's permissions to child tables:
 
 ```sql
---把分区去表的select授权给一个普通用户
+-- Grant SELECT on the partitioned table to a regular user
 => grant select on lzlpartition1 to userlzl;
 GRANT
 
---查看权限，只有主表有授权，存量分区子表不会自动授权
+-- Check permissions — only the parent table has been granted; existing partition child tables are not automatically granted
 =>  select grantee,table_schema,table_name,privilege_type from information_schema.table_privileges  where grantee='userlzl';
  grantee | table_schema |  table_name   | privilege_type 
 ---------+--------------+---------------+----------------
  userlzl | public       | lzlpartition1 | SELECT
  
- --partition of方式创建一个分区
+ -- Create a partition using PARTITION OF
  => create table LZLPARTITION1_202303 partition of LZLPARTITION1 for values from ('2023-03-01 00:00:00') to ('2023-04-01 00:00:00');
 CREATE TABLE
 
---attach方式创建一个分区
+-- Create a partition using ATTACH
 => CREATE TABLE lzlpartition1_202304
 ->   (LIKE lzlpartition1 INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
 CREATE TABLE
 => alter table lzlpartition1 attach partition lzlpartition1_202304 for values  from ('2023-04-01 00:00:00') to ('2023-05-01 00:00:00');
 ALTER TABLE
 
---再次查看权限，新增的子分区不会自动授权给其他用户（但是新增子分区权限会自动授权给owner）
+-- Check permissions again — newly created child partitions are not automatically granted to other users (but permissions are automatically granted to the owner)
 => select grantee,table_schema,table_name,privilege_type from information_schema.table_privileges  where grantee='userlzl';
  grantee | table_schema |  table_name   | privilege_type 
 ---------+--------------+---------------+----------------
  userlzl | public       | lzlpartition1 | SELECT
 ```
 
-目前来看userlzl 这个用户对所有子表都没有访问权限，但是有主表的权限
-此时userlzl可以通过主表访问分区数据，但不能通过直接访问子表访问数据
+At this point, user `userlzl` has no access permissions to any child tables, but has permissions on the parent table.
+`userlzl` can access partition data through the parent table, but cannot access data by directly querying child tables:
 
 ```sql
 => \c - userlzl;
@@ -763,7 +762,7 @@ ERROR:  42501: permission denied for table lzlpartition1_202301
 LOCATION:  aclcheck_error, aclchk.c:3466
 ```
 
-因为attach/detach不会处理权限，此时如果我们把分区detach出来，这个分区同样不能被userlzl访问
+Since ATTACH/DETACH does not handle permissions, if we DETACH a partition at this point, that partition will also be inaccessible to `userlzl`:
 
 ```sql
 => alter table lzlpartition1 detach partition lzlpartition1_202303;
@@ -777,16 +776,16 @@ ALTER TABLE
 ERROR:  42501: permission denied for table lzlpartition1_202301 
 ```
 
-由此可知
+From this we can conclude:
 
- - 分区子表和主表PostgreSQL在数据库中都是以普通表的形式存在，他们都有各自的权限体系 
- - 如果没有子表权限而主表有权限同样可以访问子表数据
- - partition of、attach/detach都不会处理权限问题
+ - Partition child tables and the parent table exist as regular tables in PostgreSQL, each with their own permission system.
+ - If you lack child table permissions but have parent table permissions, you can still access child table data.
+ - PARTITION OF, ATTACH, and DETACH do not handle permission issues.
 
-但是，分区表权限并不是仅仅控制是否能够访问，没有分区子表权限可能导致执行计划异常，参考文章：[不同用户查看到不同的执行计划](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
-这个问题是一个偶发现象，导致超级用户和一般用户看到的sql执行计划不一致，实际上业务SQL执行计划异常却看不出来，比较难定位。分区子表有各自的统计信息，子表权限与父表不一致（即便是partition of创建的分区），导致用户可以通过主表访问子表的数据，却不能查看子表的统计信息。权限问题导致了执行计划产生差异。
-这与“*权限只控制是否能访问表，不控制如何访问表*”的一般概念是违背的，所以需要注意这个权限问题。
-为了提供子表统计信息权限，建议显示对用户授权所有子表查询权限，就可以避免以上问题
+However, partition table permissions do not merely control whether access is possible. Lacking partition child table permissions can lead to abnormal execution plans. Reference article: [Different users see different execution plans](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
+This issue is an intermittent phenomenon that causes superusers and regular users to see different SQL execution plans. The actual business SQL execution plan is abnormal but goes unnoticed, making it difficult to diagnose. Partition child tables have their own statistics, and child table permissions are inconsistent with the parent table (even for partitions created via PARTITION OF), resulting in users being able to access child table data through the parent table but unable to view the child table's statistics. This permission issue leads to differences in execution plans.
+This contradicts the general concept that "*permissions only control whether you can access a table, not how you access it*," so attention must be paid to this permission issue.
+To provide permission for child table statistics, it is recommended to explicitly grant SELECT on all child tables to the user, which avoids the issues above:
 
 ```sql
 grant  select on table_partition_allname to username;
@@ -794,25 +793,25 @@ grant  select on table_partition_allname to username;
 
 ## Partition Table Maintenance
 
-### 分区表ATTACH/DETACH基本操作
+### ATTACH/DETACH Basic Operations
 
-attach/detach可以将一个已存在的表作为分区添加/分离分区表。attach/detach在维护工作中很有用。
-先来看看"create table...partition of"方式添加分区和"drop table"删除分区的锁情况
+ATTACH/DETACH can add/detach an existing table as a partition of/detach from a partitioned table. ATTACH/DETACH is very useful in maintenance work.
+First, let's look at the locking behavior of adding partitions via "CREATE TABLE ... PARTITION OF" and deleting partitions via "DROP TABLE":
 
-锁矩阵：https://www.postgresql.org/docs/current/explicit-locking.html
+Lock Matrix: https://www.postgresql.org/docs/current/explicit-locking.html
 
-申请的锁：https://postgres-locks.husseinnasser.com
+Lock Requests: https://postgres-locks.husseinnasser.com
 
-1. **partition of新增分区**
+1. **Adding a partition via PARTITION OF**
 
 ```sql
---session1 开启一个事务，只读数据
+-- Session 1: Start a transaction, read-only data
 => select * from lzlpartition1 where date_created='2023-01-01 00:00:00';
   id  |               name               |    date_created     
 ------+----------------------------------+---------------------
  8249 | 256ac66bb53d31bc6124294238d6410c | 2023-01-01 00:00:00
 
---session3 查看锁情况。读取一个分区数据时，要在子分区和主表上同时获得锁
+-- Session 3: Check lock status. When reading data from one partition, locks are acquired on both the child partition and the parent table.
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |       relname        | virtualxid | transactionid |  pid   |      mode       | granted 
@@ -820,24 +819,24 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 311449 | AccessShareLock | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 311449 | AccessShareLock | t
 
---session2 partition of方式添加分区
+-- Session 2: Add a partition via PARTITION OF
 => create table LZLPARTITION1_202305 partition of LZLPARTITION1 for values from ('2023-05-01 00:00:00') to ('2023-06-01 00:00:00');
---等待
+-- Waiting
 
---session3 再次查看锁
+-- Session 3: Check locks again
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |       relname        | virtualxid | transactionid |  pid   |        mode         | granted 
 ----------+---------+----------------------+------------+---------------+--------+---------------------+---------
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 311449 | AccessShareLock     | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 311449 | AccessShareLock     | t
- relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 308525 | AccessExclusiveLock | f   --此为partition of会话
+ relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 308525 | AccessExclusiveLock | f   -- This is the PARTITION OF session
 
---session4 再随便来一个查询
+-- Session 4: Run an arbitrary query
 => select * from lzlpartition1 where date_created='2023-01-01 00:00:00';
---等待
+-- Waiting
 
---session4再次查看锁
+-- Session 4: Check locks again
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |       relname        | virtualxid | transactionid |  pid   |        mode         | granted 
@@ -845,23 +844,23 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 311449 | AccessShareLock     | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 311449 | AccessShareLock     | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 308525 | AccessExclusiveLock | f
- relation | dbmgr   | lzlpartition1        | [null]     |        [null] |  84774 | AccessShareLock     | f  --查询阻塞
+ relation | dbmgr   | lzlpartition1        | [null]     |        [null] |  84774 | AccessShareLock     | f  -- Query is blocked
 ```
 
-partition of方式新增分区时，会申请主表的 AccessExclusiveLock，等待主表一切事务的同时也会阻塞主表的一切事务。
-![在这里插入图片描述](/img/csdn/851906be0f93.png)
+When adding a partition via PARTITION OF, an AccessExclusiveLock is requested on the parent table. This waits for all transactions on the parent table and also blocks all transactions on the parent table.
+![](/img/csdn/851906be0f93.png)
 
-虽然partition of语句本身执行很快，但是如果遇到主表上有长事务，那么分区表上的所有操作都会长时间停滞。如果没有停机窗口，直接使用partition of方式新增分区是不推荐的。
+Although the PARTITION OF statement itself executes quickly, if there are long-running transactions on the parent table, all operations on the partitioned table will stall for an extended period. Without a maintenance window, using PARTITION OF to add partitions directly is not recommended.
 
-2. **drop table删除分区**
+2. **Dropping a partition via DROP TABLE**
 
 ```sql
---session1 再次开启只读事务
---session2 删除分区表的子分区
+-- Session 1: Start another read-only transaction
+-- Session 2: Drop a child partition of the partitioned table
 => drop table lzlpartition1_202305;
---等待
+-- Waiting
 
---session3 查看锁情况
+-- Session 3: Check lock status
 =>                    
 select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
@@ -872,28 +871,28 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 308525 | AccessExclusiveLock | f
 ```
 
-drop table删除子分区时，会申请主表上的AccessExclusiveLock，等待一切和阻塞一切。同样的在生产环境需要谨慎使用。
+Dropping a child partition with DROP TABLE requests an AccessExclusiveLock on the parent table, waiting for all and blocking all. Similarly, this must be used with caution in production environments.
 
-3. **attach添加分区**
-   attach将一个已存在的普通表附加到分区表上
-   虽然attach跟partition of都可以添加分区，但是需要注意**ATTACH不会自动创建索引、约束、默认值、行级触发器**，这点跟partition of是不同的。
-   先创建一个表
+3. **ATTACH — adding a partition**
+   ATTACH attaches an existing regular table to a partitioned table.
+   Although both ATTACH and PARTITION OF can add partitions, note that **ATTACH does not automatically create indexes, constraints, default values, or row-level triggers** — this differs from PARTITION OF.
+   First, create a table:
 
 ```sql
---减少繁琐的ddl，like方式创建表
+-- To reduce tedious DDL, use LIKE to create the table
 CREATE TABLE lzlpartition1_202305
   (LIKE lzlpartition1 INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
 ```
 
-再观察attach的是否被阻塞
+Now observe whether ATTACH is blocked:
 
 ```sql
---session1 开启读写事务
+-- Session 1: Start a read-write transaction
 =>begin;
 BEGIN
 => insert into lzlpartition1 values('1234','abcd','2023-01-01 01:00:00');
 INSERT 0 1
---session3 查看锁情况
+-- Session 3: Check lock status
 =>  
 select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
@@ -902,31 +901,31 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 311449 | RowExclusiveLock | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 311449 | AccessShareLock  | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 311449 | RowExclusiveLock | t
---dml语句会获得分区主表和对应分区子表的RowExclusiveLock
+-- DML statements acquire RowExclusiveLock on the partition parent table and the corresponding partition child table
 
---session2 attach新建的表到分区主表上
+-- Session 2: ATTACH the newly created table to the partition parent table
 => alter table  lzlpartition1 attach partition  lzlpartition1_202305 for values from ('2023-05-01 00:00:00') to ('2023-06-01 00:00:00');
 ALTER TABLE
 ```
 
-attach只会申请SHARE UPDATE EXCLUSIVE锁，比ACCESS EXCLUSIVE低很多。
-![在这里插入图片描述](/img/csdn/b23cc350250f.png)
+ATTACH only requests a SHARE UPDATE EXCLUSIVE lock, which is much lighter than ACCESS EXCLUSIVE.
+![](/img/csdn/b23cc350250f.png)
 
 
-attach与读写都互不阻塞，所以推荐以attach方式添加分区，不影响业务，可在线执行。
+ATTACH does not block reads or writes, so ATTACH is recommended for adding partitions — it does not affect business operations and can be executed online.
 
 
-4. **detach删除分区**
+4. **DETACH — removing a partition**
 
-detach将一个分区脱离分区表，成为一个普通表
+DETACH removes a partition from the partitioned table, turning it into a regular table:
 
 ```sql
---session1 保持dml事务不提交
---session2 detach一个分区
+-- Session 1: Keep the DML transaction uncommitted
+-- Session 2: DETACH a partition
  alter table lzlpartition1 detach partition lzlpartition1_202305;
- --等待
+ -- Waiting
 
---session3 查看锁情况
+-- Session 3: Check lock status
  =>  select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |       relname        | virtualxid | transactionid |  pid   |        mode         | granted 
@@ -938,46 +937,46 @@ where relname like '%lzlpartition1%';
 
 ```
 
-detach跟attach不同，detach申请了主表的AccessExclusiveLock，等待一切和阻塞一切。
+Unlike ATTACH, DETACH requests an AccessExclusiveLock on the parent table, waiting for all and blocking all.
 
-5. **detach concurrently**
+5. **DETACH CONCURRENTLY**
 
-   PostgreSQL 14开始，detach新增了两种语法CONCURRENTLY 和FINALIZE
+   Starting from PostgreSQL 14, DETACH gained two new syntax variants: CONCURRENTLY and FINALIZE.
 
 >ALTER TABLE [ IF EXISTS ] _`name`_
 >DETACH PARTITION _`partition_name`_ [ CONCURRENTLY | FINALIZE ]
 
-detach concurrently内部会开启两次事务，第一次事务会在主表和子表上都申请SHARE UPDATE EXCLUSIVE锁，分区会标记为正在detach的状态，此时会等待分区表上的所有事务提交。一旦这些事务全部都提交了，第二次事务会申请主表上的 SHARE UPDATE EXCLUSIVE锁和那个子表上ACCESS EXCLUSIVE锁，随后detach concurrently完成。
+DETACH CONCURRENTLY internally starts two transactions. The first transaction requests a SHARE UPDATE EXCLUSIVE lock on both the parent and child tables, marking the partition as being in a detaching state, at which point it waits for all transactions on the partitioned table to commit. Once all those transactions have committed, the second transaction requests a SHARE UPDATE EXCLUSIVE lock on the parent table and an ACCESS EXCLUSIVE lock on that child table, after which DETACH CONCURRENTLY completes.
 
-另外，detach concurrently后的子分区，会保留约束，由分区约束转化为check约束保留在detach后的表上
+Additionally, after DETACH CONCURRENTLY, the detached child table retains its constraint — the partition constraint is converted into a CHECK constraint on the detached table.
 
-DETACH CONCURRENTLY的限制：
+DETACH CONCURRENTLY limitations:
 
-- DETACH CONCURRENTLY不能放在事务块中
-- 分区表不能有default分区
+- DETACH CONCURRENTLY cannot be placed inside a transaction block.
+- The partitioned table cannot have a DEFAULT partition.
 
 
 
-concurrently的阻塞情况：
+Locking behavior of CONCURRENTLY:
 
 ```sql
---session1
+-- Session 1
 lzldb=> begin;
 BEGIN
 lzldb=*>  insert into lzlpartition1 values('1234','abcd','2023-01-01 01:00:00');
 INSERT 0 1
 
---session2 detach concurrently
+-- Session 2: DETACH CONCURRENTLY
 lzldb=> alter table lzlpartition1 detach partition lzlpartition1_202301 concurrently;
---等待
+-- Waiting
 
---session3 查看锁
+-- Session 3: Check locks
  3691 | insert into lzlpartition1 values('1234','abcd','2023-01-01 01:00:00');        | Client          | ClientRead
  3940 | alter table lzlpartition1 detach partition lzlpartition1_202301 concurrently; | Lock            | virtualxid
  3947 | select pid,query,wait_event_type,wait_event  from pg_stat_activity;           |                 | 
---detach会话是3940，非常奇怪，detach的等待事件是virtualxid，等待事件类型是Lock
+-- The DETACH session is 3940. Interestingly, the DETACH wait event is virtualxid, and the wait event type is Lock.
 
---查看锁的情况
+-- Check lock details
 lzldb=>  select locktype,database,relation,virtualtransaction,pid,mode,granted from pg_locks where pid in (3691,3940);
    locktype    | database | relation | virtualtransaction | pid  |       mode       | granted 
 ---------------+----------+----------+--------------------+------+------------------+---------
@@ -987,64 +986,64 @@ lzldb=>  select locktype,database,relation,virtualtransaction,pid,mode,granted f
  virtualxid    |          |          | 5/179              | 3691 | ExclusiveLock    | t
  virtualxid    |          |          | 6/9                | 3940 | ShareLock        | f
  transactionid |          |          | 5/179              | 3691 | ExclusiveLock    | t
---此时的detach还没有等待表上的锁，而是在等待virtualxid的ShareLock
+-- At this point, DETACH is not yet waiting for a table-level lock; it is waiting for a ShareLock on virtualxid
 
---session4 做个插入
+-- Session 4: Try an insert
 lzldb=> insert into lzlpartition1 values('12345','abcd','2023-01-01 01:00:00');
 ERROR:  no partition of relation "lzlpartition1" found for row
 DETAIL:  Partition key of the failing row contains (date_created) = (2023-01-01 01:00:00).
 lzldb=>  insert into lzlpartition1 values('12345','abcd','2023-02-01 01:00:00');
 INSERT 0 1
---此时detach的分区已经不能插入，其他分区可以插入
---如果通过分区插入会怎样呢？可以正常插入
+-- The detaching partition can no longer accept inserts, but other partitions can.
+-- What if we insert directly into the partition? It works fine.
 lzldb=> insert into  lzlpartition1_202301  values('12345','abcd','2023-01-01 01:00:00');
 INSERT 0 1
---注意此时它还是个分区表的分区，还不是一个普通表，不过它已经被标记为不可用了
+-- Note: at this point it is still a partition of the partitioned table, not yet a regular table, but it has been marked as unavailable.
 
---\d+查看分区处于DETACH PENDING状态
+-- \d+ shows the partition in DETACH PENDING state
 Partitions: lzlpartition1_202301 FOR VALUES FROM ('2023-01-01 00:00:00') TO ('2023-02-01 00:00:00') (DETACH PENDING),
             lzlpartition1_202302 FOR VALUES FROM ('2023-02-01 00:00:00') TO ('2023-03-01 00:00:00')
             
 
---把insert的session1提交/回滚
+-- Commit/rollback the insert session (Session 1)
 lzldb=> rollback;
 ROLLBACK
 
---session2立即完成
+-- Session 2 completes immediately
 lzldb=> alter table lzlpartition1 detach partition lzlpartition1_202301 concurrently;
 ALTER TABLE
 
 ```
 
-FINALIZE：
+FINALIZE:
 
 ```sql
---session1
+-- Session 1
 lzldb=> begin;
 BEGIN
 lzldb=*>  insert into lzlpartition1 values('1234','abcd','2023-01-01 01:00:00');
 INSERT 0 1
 
---session2 detach concurrently，手动cancel
+-- Session 2: DETACH CONCURRENTLY, manually canceled
 lzldb=> alter table lzlpartition1 detach partition lzlpartition1_202301 concurrently;
 ^CCancel request sent
 ERROR:  canceling statement due to user request
 
---\d+查看分区表，分区处于DETACH PENDING状态
+-- \d+ shows the partition in DETACH PENDING state
 Partitions: lzlpartition1_202301 FOR VALUES FROM ('2023-01-01 00:00:00') TO ('2023-02-01 00:00:00') (DETACH PENDING),
             lzlpartition1_202302 FOR VALUES FROM ('2023-02-01 00:00:00') TO ('2023-03-01 00:00:00')
 
---DETACH PENDING的分区，SQL已经不会去访问了
+-- In DETACH PENDING state, SQL no longer accesses this partition
 lzldb=> explain select * from lzlpartition1;
-                                       QUERY PLAN                                        
+                                       QUERY PLAN                                       
 -----------------------------------------------------------------------------------------
  Seq Scan on lzlpartition1_202302 lzlpartition1  (cost=0.00..752.81 rows=38881 width=45)
 
---finalize使之完成
+-- Use FINALIZE to complete the detach
 lzldb=>  alter table lzlpartition1 detach partition lzlpartition1_202301 finalize; 
---等待
+-- Waiting
 
---查看锁情况
+-- Check lock status
 lzldb=> select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';lzldb-# 
  locktype | datname |       relname        | virtualxid | transactionid | pid  |           mode           | granted 
@@ -1053,32 +1052,32 @@ where relname like '%lzlpartition1%';lzldb-#
  relation | lzldb   | lzlpartition1_202301 |            |               | 3940 | AccessExclusiveLock      | f
  relation | lzldb   | lzlpartition1        |            |               | 3940 | ShareUpdateExclusiveLock | t
  relation | lzldb   | lzlpartition1_202301 |            |               | 3691 | RowExclusiveLock         | t
---3940，finalize申请了分区主表的ShareUpdateExclusiveLock和子表的AccessExclusiveLock
---由于是插入的是数据的分区刚好是detach的分区，所以发生等待
+-- 3940, FINALIZE requests ShareUpdateExclusiveLock on the parent table and AccessExclusiveLock on the child table
+-- Since the inserted data happened to be in the detaching partition, it is waiting
 
---session1结束
+-- Session 1 ends
 lzldb=!> rollback;
 ROLLBACK
---session2立即完成
+-- Session 2 completes immediately
 lzldb=>  alter table lzlpartition1 detach partition lzlpartition1_202301 finalize; 
 ALTER TABLE
             
 ```
 
-虽然detach的分区会申请8级锁，但是一般业务也没有直接通过子分区写数据的，所以只需要关注分区表的长事务尽快完成就行，一般不需要担心造成该分区子表上的后续阻塞。
+Although DETACH requests an 8-level lock on the partition, generally business operations don't write directly through child partitions, so you only need to ensure that long-running transactions on the partitioned table complete quickly. Usually, there's no need to worry about subsequent blocking on that partition's child table.
 
-在线detach小结：
+Online DETACH summary:
 
-- detach concurrently的阻塞情况跟CIC有点类似，不会阻塞其他事务，但是其本身会等待已有的事务完成，这点在lock上不太容易看出来
-- 在detach concurrently期间分区会处于DETACH PENDING中间状态，该状态有点类似invisible，sql不会找到这个分区
-- 如果是长事务导致的DETACH PENDING，应及时结束长事务；如果是中断导致的DETACH PENDING，可以使用FINALIZE使其完成detach。
+- The blocking behavior of DETACH CONCURRENTLY is somewhat similar to CIC (CREATE INDEX CONCURRENTLY) — it does not block other transactions, but it itself waits for existing transactions to complete. This is not easily visible from lock information alone.
+- During DETACH CONCURRENTLY, the partition enters a DETACH PENDING intermediate state. This state is somewhat like INVISIBLE — SQL will not find this partition.
+- If DETACH PENDING is caused by long-running transactions, promptly end those transactions; if it's caused by interruption, use FINALIZE to complete the detach.
 
 
 
 
 ### Using Constraints to Reduce ATTACH Time
 
-  1. 分区数据情况，准备操作一个较大分区的attach操作
+  1. Partition data overview — prepare to ATTACH a relatively large partition:
 
 ```sql
 =>  SELECT tableoid::regclass AS partition, count(*) FROM lzlpartition1 group by partition;
@@ -1088,7 +1087,7 @@ ALTER TABLE
  lzlpartition1_202302 |   38881
 ```
 
- 注意这个202301的分区有一个partition constraint
+ Note: this 202301 partition has a PARTITION CONSTRAINT:
 
  ```sql
  =>  \d+ lzlpartition1_202301
@@ -1105,14 +1104,14 @@ Indexes:
 Access method: heap
  ```
 
-  2. detach分区
+  2. DETACH the partition:
 
 ```sql
  alter table lzlpartition1 detach partition lzlpartition1_202301;
 ```
 
  ```sql
- --detach后，partition constraint就没有了
+ -- After DETACH, the PARTITION CONSTRAINT is gone
  => \d+ lzlpartition1_202301
                                          Table "public.lzlpartition1_202301"
     Column    |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
@@ -1125,7 +1124,7 @@ Indexes:
 Access method: heap
  ```
 
-3. 不添加check约束，attach
+3. ATTACH without adding a CHECK constraint:
 
 ```sql
 => alter table lzlpartition1 attach partition lzlpartition1_202301 for values  from ('2023-01-01 00:00:00') to ('2023-02-01 00:00:00');
@@ -1133,9 +1132,9 @@ ALTER TABLE
 Time: 343.498 ms
 ```
 
-由于要扫描分区数据是否满足分区范围，attach耗时300+ms
+Because it must scan the partition data to verify it satisfies the partition range, ATTACH took 300+ ms.
 
-  4.  添加check约束，attach
+  4. Add a CHECK constraint first, then ATTACH:
 
 ```sql
 =>  alter table lzlpartition1 detach partition lzlpartition1_202301;
@@ -1145,8 +1144,8 @@ ALTER TABLE
 Time: 355.458 ms
 ```
 
-上面添加check约束的耗时跟没有check时的attach操作耗时差不多，因为添加check约束同样也要扫描检查所有数据。
-check约束添加完后再attach，此时的attach操作非常快就能完成
+The time taken to add the CHECK constraint is roughly the same as the ATTACH operation without a CHECK — because adding a CHECK constraint also needs to scan and validate all data.
+Once the CHECK constraint is added, the subsequent ATTACH completes very quickly:
 
 ```sql
 =>  alter table lzlpartition1 attach partition lzlpartition1_202301 for values  from ('2023-01-01 00:00:00') to ('2023-02-01 00:00:00');
@@ -1154,7 +1153,7 @@ ALTER TABLE
 Time: 1.480 ms
 ```
 
-5. 删除check约束
+5. Drop the CHECK constraint:
 
 ```sql
 => \d+ lzlpartition1_202301;
@@ -1173,14 +1172,14 @@ Check constraints:
 Access method: heap
 ```
 
-注意，check constraint和partition constraint是不一样的概念，虽然他俩的约束内容可以是一致的。attach使用了check约束但是不会进行合并，可以显式删除这个多余的check。
+Note: CHECK CONSTRAINT and PARTITION CONSTRAINT are different concepts, even though their constraint content can be identical. ATTACH uses the CHECK constraint but does not merge it. You can explicitly drop this redundant CHECK:
 
 ```sql
 => alter table lzlpartition1_202301 drop constraint  chk_202301;
 ALTER TABLE
 ```
 
-另外，需要关注drop constraint申请了当前子分区上AccessExclusiveLock，这是最高级别的锁，会阻塞任何操作。所以当前子分区上有事务，谨慎执行drop constraint。
+Additionally, note that DROP CONSTRAINT requests an AccessExclusiveLock on the current child partition — this is the highest-level lock and blocks all operations. So, if there are transactions on that child partition, be cautious with DROP CONSTRAINT.
 
 ```sql
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
@@ -1190,44 +1189,45 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 448243 | AccessShareLock     | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 448243 | RowExclusiveLock    | t
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 444399 | AccessShareLock     | t
- relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 444399 | AccessExclusiveLock | f  --这个就是drop constraint会话
+ relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 444399 | AccessExclusiveLock | f  -- This is the DROP CONSTRAINT session
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 448243 | RowExclusiveLock    | t
 ```
 
-so，
-**在attach分区时，先添加check约束是比较有用，它可以减少attach的执行时间，数据检查在attach前完成就可以了**
+So,
+**When ATTACH-ing a partition, adding a CHECK constraint beforehand is useful — it reduces ATTACH execution time. The data validation just needs to be completed before ATTACH.**
 
 
-### The Correct Way to Add Partitions
+### The Correct Way to Add Partitions to a Partitioned Table
 
-我们现在知道，attach可以在线执行，而partition of/drop table/detach都会申请等待和阻塞一切的AccessExclusiveLock
-so，
-**建议用attach新建分区。partition of/detach都会等待和阻塞一切事务，而attach不会被只读/DML事务阻塞**
-所以添加分区应该使用attach，并提前创建check约束，删除约束时需要关注长事务问题。
-**分区表添加分区的正确姿势**：
+
+We now know that ATTACH can be executed online, while PARTITION OF / DROP TABLE / DETACH all request an AccessExclusiveLock that waits for and blocks everything.
+So,
+**It is recommended to use ATTACH to create new partitions. PARTITION OF / DETACH both wait for and block all transactions, while ATTACH is not blocked by read-only/DML transactions.**
+Therefore, adding partitions should use ATTACH, and a CHECK constraint should be created beforehand. When dropping constraints, be mindful of long-running transactions.
+**The correct way to add a partition to a partitioned table**:
 
 ```sql
---减少繁琐的ddl，like方式创建表
+-- To reduce tedious DDL, use LIKE to create the table
 CREATE TABLE lzlpartition1_202303
   (LIKE lzlpartition1 INCLUDING DEFAULTS INCLUDING CONSTRAINTS);
---参考其他分区的Partition constraint，添加表的check约束，减少attach检查约束的时间
+-- Refer to the PARTITION CONSTRAINT of other partitions, add a CHECK constraint on the table to reduce ATTACH constraint validation time
 alter table lzlpartition1_202303 add constraint chk_202303 CHECK ((date_created IS NOT NULL) AND (date_created >= '2023-03-01 00:00:00'::timestamp without time zone) AND (date_created < '2023-04-01 00:00:00'::timestamp without time zone));
---attach方式添加分区
+-- Add partition using ATTACH
 alter table LZLPARTITION1 attach partition LZLPARTITION1_202303 for values from ('2023-03-01 00:00:00') to ('2023-04-01 00:00:00');
---可选。在新分区有事务之前，删除多余的check约束
+-- Optional. Drop the redundant CHECK constraint before transactions start on the new partition
 alter table lzlpartition1_202303 drop constraint  chk_202303;
 ```
 
 
-### Partition Index Lock Behavior
+### Locks on Partition Indexes
 
-1. 只读事务时创建/删除分区索引
+1. Creating/dropping partition indexes during read-only transactions
 
-当分区上有共享锁时`AccessShareLock`，也就是分区表上有查询事务的情况下
-CREATE INDEX ON lzlpartition1创建成功（注意没有加concurrently）；DROP INDEX  lzlpartition1失败
+When a partition has a shared lock (AccessShareLock), meaning there is a query transaction on the partitioned table:
+CREATE INDEX ON lzlpartition1 succeeds (note: without CONCURRENTLY); DROP INDEX lzlpartition1 fails:
 
 ```sql
---session1 开启事务，读取分区表数据
+-- Session 1: Start a transaction, read data from the partitioned table
 => begin;
 BEGIN
 => select count(*) from lzlpartition1 where date_created>='2023-01-01 00:00:00' and date_created<='2023-01-02 00:00:00';
@@ -1235,16 +1235,16 @@ BEGIN
 -------
  86401
 (1 row)
---session2 创建索引，成功
+-- Session 2: Create index, succeeds
 => create index idx_datecreated on lzlpartition1(date_created);;
 CREATE INDEX
 ```
 
 ```sql
---session2 删除索引，等待
+-- Session 2: Drop index, waits
 => drop index idx_datecreated;
 
---session3 查看锁
+-- Session 3: Check locks
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |          relname          | virtualxid | transactionid |  pid   |        mode         | granted 
@@ -1255,22 +1255,22 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1             | [null]     |        [null] | 300371 | AccessShareLock     | t
 ```
 
-create index没有申请表上的AccessExclusiveLock，但是drop index申请了表上的AccessExclusiveLock。
-从这个的例子可以得出：
-**只读事务不会阻塞创建索引，但会阻塞删除索引**
+CREATE INDEX does not request an AccessExclusiveLock on the table, but DROP INDEX does.
+From this example we can conclude:
+**Read-only transactions do not block CREATE INDEX, but they do block DROP INDEX.**
 
-2. 更新事务时创建/删除分区索引
+2. Creating/dropping partition indexes during update transactions
 
 ```sql
---session1 开启更新事务
+-- Session 1: Start an update transaction
 => begin;
 BEGIN
 => update lzlpartition1 set name='abc' where date_created='2023-01-01 10:00:00';
 UPDATE 1
---session2 创建分区索引，等待
+-- Session 2: Create partition index, waits
 => create index idx_datecreated on lzlpartition1(date_created);
 
---session3 查看锁情况
+-- Session 3: Check lock status
 =>select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 -> where relname like '%lzlpartition1%';
  locktype | datname |          relname          | virtualxid | transactionid |  pid   |       mode       | granted 
@@ -1282,19 +1282,19 @@ UPDATE 1
  relation | dbmgr   | lzlpartition1             | [null]     |        [null] | 300371 | RowExclusiveLock | t
 ```
 
-create index会话（99598）申请分区主表的ShareLock锁，DML事务会话（300371 ）持有该子分区和主表的RowExclusiveLock
-![在这里插入图片描述](/img/csdn/9fc4b97314bd.png)
+The CREATE INDEX session (99598) requests a ShareLock on the partition parent table; the DML transaction session (300371) holds RowExclusiveLock on the child partition and parent table.
+![](/img/csdn/9fc4b97314bd.png)
 
-create index（无concurrently）会话申请主表ShareLock；
-只读事务会话申请主表和子表的AccessShareLock；
-更新事务会话申请主表和子表的RowExclusiveLock；
+CREATE INDEX (without CONCURRENTLY) requests ShareLock on the parent table;
+Read-only transactions request AccessShareLock on the parent and child tables;
+Update transactions request RowExclusiveLock on the parent and child tables;
 ==>
-AccessShareLock不阻塞ShareLock，所以查询不阻塞create index（无concurrently）；
-RowExclusiveLock阻塞ShareLock，所以DML阻塞create index（无concurrently）；
+AccessShareLock does not block ShareLock, so queries do not block CREATE INDEX (without CONCURRENTLY);
+RowExclusiveLock blocks ShareLock, so DML blocks CREATE INDEX (without CONCURRENTLY);
 
-3. concurrently创建分区索引
+3. Creating partitioned indexes with CONCURRENTLY
 
-**注意：在分区表上不能用concurrently创建索引**
+**Note: You cannot create indexes with CONCURRENTLY on a partitioned table.**
 
 ```sql
 => create index concurrently idx_datecreated on lzlpartition1(date_created);
@@ -1302,16 +1302,16 @@ ERROR:  0A000: cannot create index on partitioned table "lzlpartition1" concurre
 LOCATION:  DefineIndex, indexcmds.c:665
 ```
 
-有个patch https://commitfest.postgresql.org/35/2815/在解决这个问题。
+There is a patch at https://commitfest.postgresql.org/35/2815/ working on solving this issue.
 
-目前可以在分区子表上concurrently创建索引。
+Currently, you can create indexes with CONCURRENTLY on individual partition child tables:
 
 ```sql
---session1 仍然使用之前的DML事务
---session2 concurrently方式在子表上创建索引，等待
+-- Session 1: Still using the previous DML transaction
+-- Session 2: Create index with CONCURRENTLY on a child table, waits
 => create index concurrently idx_datecreated_202301 on lzlpartition1_202301(date_created);
 
---session3 查询锁情况
+-- Session 3: Check lock status
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |          relname          | virtualxid | transactionid |  pid   |           mode           | granted 
@@ -1323,48 +1323,48 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1             | [null]     |        [null] | 300371 | RowExclusiveLock         | t
 ```
 
-concurrently申请的锁降低了一级，跟ROW EXCL**不冲突了**。锁都不冲突了，但是为什么concurrently本身还是被阻塞了呢？
+With CONCURRENTLY, the requested lock is one level lower and **no longer conflicts** with ROW EXCL. The locks don't conflict, so why is CONCURRENTLY itself still blocked?
 
 >  it must wait for all existing transactions that could potentially modify or use the index to terminate. 
 
-官方文档解释concurrently需要等待潜在修改/使用索引的事务完成，我们这里的update语句更新了索引字段，所以concurrently需要等待它完成。
-**虽然concurrently本身因为之前的DML语句没有完成，但是这也有一个好处：concurrently不会阻塞后续的DML语句**。
+The official documentation explains that CONCURRENTLY needs to wait for transactions that could potentially modify or use the index to terminate. In our case, the UPDATE statement modified the indexed column, so CONCURRENTLY needs to wait for it to complete.
+**Although CONCURRENTLY itself hasn't completed due to the prior DML statement, there's a benefit: CONCURRENTLY does not block subsequent DML statements.**
 
 ```sql
---concurrently没有完成的情况下
---session4 更新一条记录
+-- While CONCURRENTLY has not yet completed
+-- Session 4: Update a record
 =>  update lzlpartition1 set name='abc' where date_created='2023-01-01 12:00:00';
 UPDATE 1
 ```
 
-汇总分区索引的锁问题：
+Summary of partition index locking issues:
 
- - 分区表上只读/读写/创建索引时的锁跟普通表是差不多的，只需要注意事务会在分区主表和子表上都会加锁，所以后续阻塞链的锁更重时，会影响所有分区
- - 只读事务不会阻塞create index，但是会阻塞drop index
- - DML会阻塞create index，也会阻塞create index concurrently，但是concurrently不会阻塞DML
- - 虽然在分区表上create index可以自动在各个分区和未来分区上创建索引，但是由于阻塞问题不建议在生产直接使用
- - 不能在分区主表上直接使用concurrently，所以需要在各个分区子表上concurrently创建索引
- - concurrently不会阻塞后续的事务，但本身会被之前的长事务阻塞，也可能导致创建的索引失效，所以需要关注长事务问题
+ - Locking for read-only/read-write/index creation on partitioned tables is similar to regular tables. Just note that transactions acquire locks on both the partition parent table and child tables, so when subsequent blocking chains involve heavier locks, all partitions are affected.
+ - Read-only transactions do not block CREATE INDEX, but they do block DROP INDEX.
+ - DML blocks CREATE INDEX and also blocks CREATE INDEX CONCURRENTLY, but CONCURRENTLY does not block DML.
+ - Although CREATE INDEX on a partitioned table automatically creates indexes on all existing and future partitions, it is not recommended for direct use in production due to blocking issues.
+ - You cannot use CONCURRENTLY directly on the partition parent table, so you need to create indexes with CONCURRENTLY on each partition child table.
+ - CONCURRENTLY does not block subsequent transactions but itself gets blocked by prior long-running transactions and may cause the created index to be invalid. Attention must be paid to long-running transactions.
 
 
 ### The Correct Way to Create Partition Indexes
 
-虽然不能以concurrently方式在分区表上创建索引，但可以在分区子表用concurrently创建索引，需要用到语法：
-`CREATE INDEX ON ONLY` ：在主表上创建一个无效索引，不会在子分区自动创建索引
-`CREATE INDEX CONCURRENTLY` ：concurrently方式在子分区上创建索引
-`ALTER INDEX .. ATTACH PARTITION`：将分区索引ATTACH到主索引上，所有子分区索引ATTACH后，分区主表索引自动标记为有效。
-不过在执行这些命令时仍然需要关注锁的情况
+Although you cannot create indexes with CONCURRENTLY on a partitioned table, you can create indexes with CONCURRENTLY on partition child tables using the following syntax:
+`CREATE INDEX ON ONLY` : Creates an invalid index on the parent table; does not automatically create indexes on child partitions.
+`CREATE INDEX CONCURRENTLY` : Creates an index with CONCURRENTLY on a child partition.
+`ALTER INDEX .. ATTACH PARTITION` : Attaches the partition index to the parent index. After all child partition indexes have been attached, the partition parent table index is automatically marked as valid.
+However, when executing these commands, you still need to pay attention to locking behavior.
 
-下面观察上面两个语句申请锁和阻塞的情况：
-（过程中全程开启session1的DML显示事务）
+Below, observe the lock requests and blocking for the above two statements:
+(DML explicit transaction in Session 1 is kept open throughout)
 
-  1. ONLY创建索引的阻塞情况
+  1. Blocking behavior of CREATE INDEX ON ONLY:
 
 ```sql
 => CREATE INDEX IDX_DATECREATED ON ONLY lzlpartition1(date_created);
---等待
+-- Waiting
 
---查看锁情况
+-- Check lock status
  locktype | datname |       relname        | virtualxid | transactionid |  pid   |       mode       | granted 
 ----------+---------+----------------------+------------+---------------+--------+------------------+---------
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 448243 | RowExclusiveLock | t
@@ -1372,60 +1372,60 @@ UPDATE 1
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 444399 | ShareLock        | f
 ```
 
-ONLY创建索引会申请ShareLock锁，ShareLock跟RowExclusiveLock是相互阻塞的。所以，虽然ONLY本身执行会很快，但是ONLY创建索引也不是无脑使用。
+CREATE INDEX ON ONLY requests a ShareLock. ShareLock and RowExclusiveLock block each other. So, although ONLY itself executes very quickly, CREATE INDEX ON ONLY should not be used casually either.
 
 ```sql
---将DML事务结束后，ONLY创建索引完成
+-- After the DML transaction ends, CREATE INDEX ON ONLY completes
     "idx_datecreated" btree (date_created) INVALID
 ```
 
-`CREATE INDEX ON ONLY`在分区主表上创建了一个失效索引，且不会在子分区创建索引。
+`CREATE INDEX ON ONLY` creates an invalid index on the partition parent table and does not create indexes on child partitions.
 
-  2. ATTACH索引的阻塞情况
+  2. Blocking behavior of ATTACH index:
 
 ```sql
---将ONLY索引创建完成后，再开启session1的DML显示事务
+-- After ONLY index creation completes, start another DML explicit transaction in Session 1
 => begin;
 BEGIN
 => insert into lzlpartition1 values('1111','abc','2023-01-01 00:00:00');
 INSERT 0 1
 
---session2 concurrently创建子分区的索引
+-- Session 2: Create index with CONCURRENTLY on child partition
 => create index concurrently idx_datecreated_202302 on  lzlpartition1_202302(date_created);
-CREATE INDEX  --202302分区索引创建完成
+CREATE INDEX  -- 202302 partition index created
 => create index concurrently idx_datecreated_202304 on  lzlpartition1_202304(date_created);
-CREATE INDEX --202302分区索引创建完成
+CREATE INDEX -- 202304 partition index created
 => create index concurrently idx_datecreated_202301 on  lzlpartition1_202301(date_created);
-----创建202302分区索引等待
+---- Creating 202301 partition index, waiting
 ```
 
-concurrently会等待潜在使用索引的事务完成，我们这里的显示事务只插入了202301分区，也只有这个分区的concurrently创建索引没有完成。
+CONCURRENTLY waits for transactions that might use the index to complete. Our explicit transaction only inserted into the 202301 partition, so only this partition's CONCURRENTLY index creation hasn't completed.
 
 ```sql
---完成session1的DML显示事务，等待索引完成后，然后再次开启事务
+-- Complete the DML explicit transaction in Session 1, wait for the index to finish, then start another transaction
 => commit;
 COMMIT
 => begin;
 BEGIN
 => insert into lzlpartition1 values('1111','abc','2023-01-01 00:00:01');
 INSERT 0 1
---session2 attach索引
+-- Session 2: ATTACH index
  => ALTER INDEX  idx_datecreated ATTACH PARTITION idx_datecreated_202302;
-ALTER INDEX  --成功ATTACH
+ALTER INDEX  -- ATTACH successful
 => \d+ idx_datecreated
                         Partitioned index "public.idx_datecreated"
     Column    |            Type             | Key? |  Definition  | Storage | Stats target 
 --------------+-----------------------------+------+--------------+---------+--------------
  date_created | timestamp without time zone | yes  | date_created | plain   | 
 btree, for table "public.lzlpartition1", invalid
-Partitions: idx_datecreated_202302     --202302子分区索引已经attach，索引仍为invalid
+Partitions: idx_datecreated_202302     -- 202302 child partition index has been attached, index still invalid
 Access method: btree
---将剩余的子分区索引全部attach
+-- Attach the remaining child partition indexes
 => ALTER INDEX  idx_datecreated ATTACH PARTITION idx_datecreated_202301;
-ALTER INDEX  --成功ATTACH
+ALTER INDEX  -- ATTACH successful
 => ALTER INDEX  idx_datecreated ATTACH PARTITION idx_datecreated_202304;
-ALTER INDEX  --成功ATTACH 
---完成所有子分区索引attach后，主表索引自动有效
+ALTER INDEX  -- ATTACH successful
+-- After all child partition indexes are attached, the parent table index automatically becomes valid
 => \d+ idx_datecreated
                         Partitioned index "public.idx_datecreated"
     Column    |            Type             | Key? |  Definition  | Storage | Stats target 
@@ -1438,31 +1438,31 @@ Partitions: idx_datecreated_202301,
 Access method: btree
 ```
 
-attach不会被DML阻塞，直接完成。此时用partition of创建的新分区也会自动创建子分区索引。
+ATTACH is not blocked by DML and completes immediately. At this point, new partitions created via PARTITION OF will also automatically get the child partition index.
 
-综上所述，
+In summary,
 
- - `CREATE INDEX ON ONLY`会申请`ShareLock`锁，跟DML申请的`RowExclusiveLock`是相互阻塞的
- - `CREATE INDEX CONCURRENTLY`会申请`ShareUpdateExclusiveLock`锁，不会阻塞DML申请的`RowExclusiveLock`，但是`CREATE INDEX CONCURRENTLY`需要等待DML事务完成才能完成（concurrently可以获得锁，但不能完成）
- - `ALTER INDEX .. ATTACH PARTITION`会申请`AccessShareLock`，这是最轻的锁，跟DML申请的`RowExclusiveLock`相互不阻塞。
- - 查询申请的是`AccessShareLock`最轻的锁，除非DDL申请`AccessExclusiveLock`最重的锁，不然不会发生阻塞
+ - `CREATE INDEX ON ONLY` requests a `ShareLock`, which mutually blocks with the `RowExclusiveLock` requested by DML.
+ - `CREATE INDEX CONCURRENTLY` requests a `ShareUpdateExclusiveLock`, which does not block the `RowExclusiveLock` requested by DML. However, `CREATE INDEX CONCURRENTLY` needs to wait for DML transactions to complete before it can finish (CONCURRENTLY can acquire the lock but cannot complete).
+ - `ALTER INDEX .. ATTACH PARTITION` requests an `AccessShareLock`, which is the lightest lock and does not block the `RowExclusiveLock` requested by DML.
+ - Queries request `AccessShareLock`, the lightest lock. Unless DDL requests `AccessExclusiveLock` (the heaviest lock), blocking does not occur.
 
-所以，直接在分区上create index会阻塞DML，是不可取的
-**创建分区索引的正确姿势**：
+Therefore, directly running CREATE INDEX on a partition blocks DML and is not acceptable.
+**The correct way to create partition indexes**:
 
 ```sql
---ONLY方式在分区主表上创建失效索引。快，会阻塞后续dml，会影响业务，需要关注长事务
+-- Use ONLY to create an invalid index on the partition parent table. Fast, but blocks subsequent DML, affects business — watch for long-running transactions.
 CREATE INDEX IDX_DATECREATED ON ONLY lzlpartition1(date_created);
---CONCURRENTLY在各个分区子表上创建索引。慢，不会阻塞后续dml，不会影响业务，但需要关注DML长事务防止本身失败
+-- Use CONCURRENTLY to create indexes on each partition child table. Slow, does not block subsequent DML, does not affect business, but watch for long-running DML transactions to prevent failure.
 create index concurrently idx_datecreated_202302 on  lzlpartition1_202302(date_created);
---所有索引attach。快，不会发生业务阻塞
+-- ATTACH all indexes. Fast, does not cause business blocking.
  ALTER INDEX idx_datecreated ATTACH PARTITION idx_datecreated_202302;
 ```
 
-### Adding Primary Keys and Unique Indexes on Partitioned Tables
+### Adding Primary Keys and Unique Indexes to Partitioned Tables
 
-“主键索引”功能上等于“唯一索引+null约束”（但是主键只能有一个）。分区表创建唯一索引可以参考上面的索引创建最佳实践：only创建主表索引、concurrently创建子表索引、attach。
-而主键虽然支持普通表using index语法，但是目前不支持分区表这样使用：
+A "primary key index" is functionally equivalent to "unique index + NOT NULL constraint" (but there can only be one primary key). Creating unique indexes on partitioned tables can follow the index creation best practices above: ONLY on parent, CONCURRENTLY on children, ATTACH.
+However, while primary keys on regular tables support the USING INDEX syntax, partitioned tables currently do not support this:
 
 ```sql
 => ALTER TABLE lzlpartition1 ADD CONSTRAINT pk_id_date_created PRIMARY KEY USING INDEX idx_uniq;
@@ -1470,14 +1470,14 @@ ERROR:  0A000: ALTER TABLE / ADD CONSTRAINT USING INDEX is not supported on part
 LOCATION:  ATExecAddIndexConstraint, tablecmds.c:8032
 ```
 
-也就是说可以通过提前创建not null约束+attach索引的方式创建一个非空的唯一索引，但是最后一步using index添加主键却不行。
+In other words, you can create a NOT NULL unique index by pre-creating a NOT NULL constraint + ATTACH-ing indexes, but the final step of USING INDEX to add the primary key does not work.
 
-下面看下直接添加/删除主键的阻塞情况
+Now let's look at the blocking behavior of directly adding/dropping primary keys:
 
-1. 直接删除主键
+1. Directly dropping a primary key:
 
 ```sql
---session 1 
+-- Session 1
 => begin;
 BEGIN
 Time: 0.318 ms
@@ -1485,10 +1485,10 @@ Time: 0.318 ms
   id  |               name               |    date_created     
 ------+----------------------------------+---------------------
  7715 | beee680a86e1d12790489e9ab4a4351b | 2023-01-01 22:00:00
- --session2 删除主键等待
+ -- Session 2: Drop primary key, waits
  => alter table lzlpartition1 drop constraint lzlpartition1_pkey;
  
- --session3 观察
+ -- Session 3: Observe
  => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |          relname          | virtualxid | transactionid |  pid  |        mode         | granted 
@@ -1500,42 +1500,42 @@ where relname like '%lzlpartition1%';
  relation | dbmgr   | lzlpartition1             | [null]     |        [null] | 21659 | AccessShareLock     | t
 ```
 
-删除主键申请的是AccessExclusiveLock，阻塞一切
+Dropping a primary key requests an AccessExclusiveLock, blocking everything.
 
-2. 直接添加主键
+2. Directly adding a primary key:
 
 ```sql
---session1事务结束，session2的删除主键完成
---session1再次开启只读事务
---session2在分区表上添加主键，等待
+-- Session 1 transaction ends; Session 2's drop primary key completes
+-- Session 1 starts another read-only transaction
+-- Session 2: Add a primary key on the partitioned table, waits
 => ALTER TABLE lzlpartition1 ADD PRIMARY KEY(id, date_created);
 
---session3 观察锁
+-- Session 3: Observe locks
 => select l.locktype,d.datname,r.relname,l.virtualxid,l.transactionid,l.pid,l.mode,l.granted from pg_locks l left join pg_database d on l.database=d.oid left join pg_class r on l.relation=r.oid 
 where relname like '%lzlpartition1%';
  locktype | datname |       relname        | virtualxid | transactionid |  pid  |        mode         | granted 
 ----------+---------+----------------------+------------+---------------+-------+---------------------+---------
  relation | dbmgr   | lzlpartition1_202301 | [null]     |        [null] | 21659 | AccessShareLock     | t
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 95016 | AccessShareLock     | t
- relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 95016 | AccessExclusiveLock | f  --添加主键的会话
+ relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 95016 | AccessExclusiveLock | f  -- Session adding primary key
  relation | dbmgr   | lzlpartition1        | [null]     |        [null] | 21659 | AccessShareLock     | t
 ```
 
-添加主键在主表上申请AccessExclusiveLock，阻塞一切。
-分区表上添加索引很慢，主键又会造成后续的阻塞，目前没有影响较小的在分区表上添加主键的办法。虽然没有达到目的，可以考虑用“attach唯一索引+非空约束”的办法；或者只能申请较长的停分区表业务，等待创建索引完成；或者通过第三方同步工具将数据插入一个带主键的分区表。
+Adding a primary key requests an AccessExclusiveLock on the parent table, blocking everything.
+Adding an index on a partitioned table is very slow, and a primary key causes subsequent blocking. Currently, there is no low-impact way to add a primary key on a partitioned table. As a workaround, you can consider using the "ATTACH unique index + NOT NULL constraint" approach; or you may have to schedule a long maintenance window for the partitioned table business and wait for index creation to complete; or use a third-party sync tool to insert data into a partitioned table that already has the primary key.
 
 
 
 ### Adding Partitions to HASH Partitioned Tables
 
-如果新增后的分区数为之前的整数倍，那么我们将会知道新分区的数据来自哪个老分区。比如将原本只有3个分区的hash分区表做成6个分区的，我们可以知道分区数据来源
-![在这里插入图片描述](/img/csdn/84a32ff4147c.png)
+If the new number of partitions is an integer multiple of the old number, we can know which old partition the data in the new partition came from. For example, expanding a 3-partition HASH partitioned table to 6 partitions, we can determine the data source:
+![](/img/csdn/84a32ff4147c.png)
 
-虽然了解了这种简单的数据特性，但实际情况可能没有什么用，因为新分区的hash分区总是被暴力插入的。从操作上“3->4”的新增分区操作和“3->6”的新增分区操作没有什么区别。
-目前成熟的数据同步工具已经非常多了，比如使用dts把表插入到新表中然后做表切换，停机时间会很短，生产环境应优先选择这个方案。
-下面是主要是测试和观察hash分区表手动新增整数倍分区时的操作：
+Although understanding this simple data characteristic is helpful, in practice it may not be very useful, because new HASH partitions are always populated by brute-force INSERT. In terms of operations, going from "3→4" partitions is no different from "3→6".
+Mature data sync tools are now widely available. For example, using DTS to insert the table into a new table and then performing a table switch — this results in very short downtime and should be the preferred approach in production.
+Below is primarily testing and observing the manual addition of integer-multiple partitions to a HASH partitioned table:
 
-  1. 分区信息
+  1. Partition info:
 
 ```sql
 SELECT tableoid::regclass,count(*) FROM orders group by tableoid::regclass;
@@ -1546,8 +1546,8 @@ SELECT tableoid::regclass,count(*) FROM orders group by tableoid::regclass;
  orders_p2 |  3369
 ```
 
-    2. detach分区
-       3个分区的hash原生分区表再添加3个分区
+    2. DETACH partitions:
+       Adding 3 more partitions to a 3-partition HASH native partitioned table:
 
 ```sql
 ALTER TABLE orders DETACH PARTITION orders_p1;
@@ -1555,7 +1555,7 @@ ALTER TABLE orders DETACH PARTITION orders_p2;
 ALTER TABLE orders DETACH PARTITION orders_p3;
 ```
 
-  3. rename分区
+  3. RENAME partitions:
 
 ```sql
 ALTER TABLE orders_p1 RENAME TO bak_orders_p1;
@@ -1563,7 +1563,7 @@ ALTER TABLE orders_p2 RENAME TO bak_orders_p2;
 ALTER TABLE orders_p3 RENAME TO bak_orders_p3;
 ```
 
-  4. 在老表上创建6个hash分区
+  4. Create 6 HASH partitions on the old table:
 
 ```sql
 CREATE TABLE orders_p1 PARTITION OF orders FOR VALUES WITH (MODULUS 6, REMAINDER 0);
@@ -1574,8 +1574,8 @@ CREATE TABLE orders_p5 PARTITION OF orders FOR VALUES WITH (MODULUS 6, REMAINDER
 CREATE TABLE orders_p6 PARTITION OF orders FOR VALUES WITH (MODULUS 6, REMAINDER 5);
 ```
 
-  5. 查看分区信息
-     注意分区约束使用的函数
+  5. View partition info:
+     Note the function used in the partition constraint:
 
 ```sql
 \d+ orders_p1
@@ -1589,8 +1589,8 @@ Partition constraint: satisfies_hash_partition('412053'::oid, 6, 0, order_id)
 Access method: heap
 ```
 
-计算老分区数据需要插入到哪个新分区上
-例如原先为modulus 3，remainder 0的分区，需要把数据分别插入到modulus 6，remainder0和3两个分区中。
+Calculate which new partition old partition data should be inserted into.
+For example, the old modulus 3, remainder 0 partition's data needs to be split into the modulus 6, remainder 0 and remainder 3 partitions:
 
 ```sql
  select count(*) from bak_orders_p1 where satisfies_hash_partition('412053'::oid, 6, 0, order_id)=true;
@@ -1607,8 +1607,8 @@ Access method: heap
   3377
 ```
 
-  6.通过分区子表Insert data:
-可以直接把数据插入对应的分区子表上，而不是通过分区主表插入
+  6. Insert data directly into partition child tables:
+You can insert data directly into the corresponding partition child tables rather than through the partition parent table:
 
 ```sql
 INSERT INTO orders_p1 SELECT * FROM bak_orders_p1 where satisfies_hash_partition('412053'::oid, 6, 0, order_id)=true;
@@ -1619,7 +1619,7 @@ INSERT INTO orders_p5 SELECT * FROM bak_orders_p2 where satisfies_hash_partition
 INSERT INTO orders_p6 SELECT * FROM bak_orders_p3 where satisfies_hash_partition('412053'::oid, 6, 5, order_id)=true;
 ```
 
-  7. 验证3个老分区的数据已插入到6个新分区中
+  7. Verify data from 3 old partitions has been inserted into 6 new partitions:
 
  ```sql
 SELECT tableoid::regclass,count(*) FROM orders group by tableoid::regclass;
@@ -1635,21 +1635,21 @@ SELECT tableoid::regclass,count(*) FROM orders group by tableoid::regclass;
 
 
 
-### Index Rebuild When Altering Partition Key Column Length
+### Changing Column Length on Partitioned Tables Rebuilds Indexes
 
-修改字段需要考虑三个方面：表重写、索引重建、统计信息丢失
+Modifying a column involves three considerations: table rewrite, index rebuild, and statistics loss.
 
-- 修改字段类型、字段长度减少都会重写表
-- 字段长度增加仅会丢失统计信息，一个例外情况是将长度改小（或者int4改int8）会重写表
-- 字段长度增加不会重建索引，一个例外情况是分区表字段长度增加会重建索引（如果这个字段有索引）
+- Changing column type or reducing column length rewrites the table.
+- Increasing column length only causes statistics loss; an exception is reducing the length (or changing int4 to int8), which rewrites the table.
+- Increasing column length does not rebuild indexes, with one exception: increasing column length on a partitioned table rebuilds indexes (if the column has an index).
 
-修改字段，参考PostgreSQL学徒。
+For column modifications, refer to the PostgreSQL apprentice.
 
-这里主要测试*分区表将字段改长*的场景，如果存在索引的话，可能会引起分区表上的事务阻塞。
-普通表，将有索引的字段改长：
+Here we mainly test the scenario of *increasing column length on a partitioned table*. If an index exists, it may cause transaction blocking on the partitioned table.
+Regular table, increasing the length of an indexed column:
 
 ```sql
---新建普通表和索引
+-- Create regular table and index
 => create table t111(id int,name varchar(50));
 CREATE TABLE
 => insert into t111 values(1001,'abc');
@@ -1657,30 +1657,30 @@ INSERT 0 1
 => create index idx111 on t111(name);
 CREATE INDEX
 
---索引文件relfilenode为417728
+-- Index file relfilenode is 417728
  select pg_relation_filepath('idx111');
  pg_relation_filepath 
 ----------------------
  base/16398/417728
 (1 row)
 
---将字段改长
+-- Increase column length
 =>  alter table t111  alter column name type varchar(60);
 ALTER TABLE
---索引文件relfilenode为417728，未发生变化，普通表索引未重建
+-- Index file relfilenode is still 417728, unchanged. Regular table index was NOT rebuilt.
 =>  select pg_relation_filepath('idx111');
  pg_relation_filepath 
 ----------------------
  base/16398/417728
 ```
 
-分区表，将有索引的字段改长：
+Partitioned table, increasing the length of an indexed column:
 
 ```sql
---在分区表上创建一个索引
+-- Create an index on the partitioned table
 => create index idx_name on lzlpartition1(name);
 CREATE INDEX
---查看其中一个分区上的索引
+-- Check the index on one partition
 => \d+ lzlpartition1_202301
                                          Table "dbmgr.lzlpartition1_202301"
     Column    |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
@@ -1700,7 +1700,7 @@ Access method: heap
  base/16398/417810 | base/16398/417800
 (1 row)
 
---将索引字段改大，分区表索引重建
+-- Increase the indexed column length — partitioned table index is rebuilt
 =>  alter table lzlpartition1  alter column name type varchar(60);
 ALTER TABLE
 => select pg_relation_filepath('lzlpartition1_202301_name_idx') idx,pg_relation_filepath('lzlpartition1_202301') tbl;
@@ -1708,7 +1708,7 @@ ALTER TABLE
 -------------------+-------------------
  base/16398/417814 | base/16398/417800
 
---将索引字段改小，分区表重写
+-- Reduce the indexed column length — partitioned table is rewritten
 =>  alter table lzlpartition1  alter column name type varchar(40);
 ALTER TABLE
 Time: 609.585 ms
@@ -1717,7 +1717,7 @@ Time: 609.585 ms
 -------------------+-------------------
  base/16398/417828 | base/16398/417825
 
---将索引字段保持原样，分区表索引重建
+-- Keep the indexed column length the same — partitioned table index is still rebuilt
 =>  alter table lzlpartition1  alter column name type varchar(40);
 ALTER TABLE
 => select pg_relation_filepath('lzlpartition1_202301_name_idx') idx,pg_relation_filepath('lzlpartition1_202301') tbl;
@@ -1726,29 +1726,29 @@ ALTER TABLE
  base/16398/417834 | base/16398/417825
 ```
 
-普通表改大字段长度只需要关注统计信息会丢失（int到bigint除外）；但是分区表在改大字段长度时，如果这个字段上有索引，不仅会丢失统计信息，还会重建索引。由于alter修改字段是8级锁，所以重建索引期间会导致长时间阻塞。
-建议：先把索引删除，修改完字段后，“父表ONLY+子表CIC+ATTACH”的方式建索引。
+For regular tables, increasing column length only requires attention to statistics loss (except int to bigint). However, for partitioned tables, when increasing column length, if the column has an index, not only are statistics lost but the index is also rebuilt. Since ALTER COLUMN is an 8-level lock, the index rebuild period causes extended blocking.
+Recommendation: first drop the index, modify the column, then rebuild the index using the "parent table ONLY + child tables CIC + ATTACH" approach.
 
 
-### Partition Maintenance Summary
+### Partition Table Maintenance Summary
 
-- partition of/drop table/DETACH需要 ACCESS EXCLUSIVE锁；推荐ATTACH/DETACH CONCURRENTLY，它们不会造成阻塞，DETACH CONCURRENTLY需关注已有长事务
-- attach表分区前可以提前在分区上创建约束，这样会减去在attach时扫描分区数据的时间
-- 目前不支持分区表CIC创建索引，可以通过在“主表上only+子表上concurrently+attach索引”的方式创建分区索引，减少业务阻塞时间
-- 分区表不支持using index方式创建主键
-- 需要关注分区表修改字段长度这个例外情况
+- PARTITION OF / DROP TABLE / DETACH require ACCESS EXCLUSIVE locks. ATTACH / DETACH CONCURRENTLY are recommended — they do not cause blocking. For DETACH CONCURRENTLY, watch for existing long-running transactions.
+- Before ATTACH-ing a partition, you can pre-create a constraint on the partition. This eliminates the time spent scanning partition data during ATTACH.
+- Currently, CIC (CREATE INDEX CONCURRENTLY) is not supported on partitioned tables. You can create partition indexes using the "ONLY on parent + CONCURRENTLY on children + ATTACH index" approach to reduce business blocking time.
+- Partitioned tables do not support the USING INDEX method for creating primary keys.
+- Pay attention to the exceptional case of modifying column length on partitioned tables.
 
 ## Partition Table Optimization
 
 ### Partition Pruning
 
-分区裁剪（Partition Pruning）可以为声明式分区提升性能，是分区表优化非常重要的特性。如果没有分区裁剪，那么查询会扫描所有分区。当有分区裁剪时，优化器可以通过where条件过滤那些不需要访问的分区
+Partition Pruning can improve performance for declarative partitioning and is a very important feature for partitioned table optimization. Without partition pruning, queries would scan all partitions. With partition pruning, the optimizer can filter out partitions that don't need to be accessed through the WHERE condition.
 ![Partition pruning](/img/csdn/574daf83f7c1.png)
-分区裁剪依赖于分区约束Partition constraint(\d+可以看到），也就是说**查询必须带有分区键**条件才能进行裁剪。这个约束不同于一般约束constraint，它在分区创建时自动创建。
-分区裁剪由enable_partition_pruning参数控制，默认为on。
+Partition pruning relies on the PARTITION CONSTRAINT (visible with \d+), which means **queries must include partition key conditions** for pruning to occur. This constraint differs from regular CHECK constraints — it is automatically created when the partition is created.
+Partition pruning is controlled by the `enable_partition_pruning` parameter, which defaults to on.
 
 ```sql
---没有分区裁剪时，会访问所有分区
+-- Without partition pruning, all partitions are accessed
 => set enable_partition_pruning=off;
 SET
 
@@ -1764,7 +1764,7 @@ SET
          ->  Seq Scan on lzlpartition1_202304 lzlpartition1_3  (cost=0.00..15.62 rows=2 width=0)
                Filter: (date_created = '2023-01-01 00:00:00'::timestamp without time zone)
 
---有分区裁剪时，不需要访问的分区被排除
+-- With partition pruning enabled, partitions that don't need to be accessed are excluded
 => set enable_partition_pruning=on;
 SET
 
@@ -1777,9 +1777,9 @@ SET
 (3 rows)
 ```
 
-（官方文档说生成执行计划时发生裁剪，那么explain有Subplans Removed字样，经测试有时候没有，就像上面的explain例子）
-**分区裁剪可能发生在两个阶段：生成执行计划时、真正执行时**
-为什么会发生这样的情况呢？因为有时候只有执行时才会知道那些分区可以裁剪。有两种情况：
+(The official documentation says pruning happens during execution plan generation, and EXPLAIN would show "Subplans Removed." In testing, this isn't always the case, as in the EXPLAIN example above.)
+**Partition pruning can occur at two stages: during execution plan generation, and during actual execution.**
+Why does this happen? Because sometimes only at execution time can we know which partitions can be pruned. There are two scenarios:
 
 1. Parameterized Nested Loop Joins: The parameter from the outer side of the
    join can be used to determine the minimum set of inner side partitions to
@@ -1788,17 +1788,17 @@ SET
 2. Initplans: Once an initplan has been executed we can then determine which
    partitions match the value from the initplan.
 
-模拟执行时发生裁剪：从其他表拿数据优化器肯定不知道数据是什么，就无法以此为依据在执行计划时发生分区裁剪：
+Simulating runtime pruning: When fetching data from another table, the optimizer certainly doesn't know what the data is, so it cannot use that as a basis for partition pruning during plan generation:
 
 ```sql
---创建一个其他表
+-- Create another table
 => create table x(date_created timestamp);
 CREATE TABLE
 
 => insert into x values('2023-01-01 09:00:00');
 INSERT 0 1
 
---仅生成执行计划，不执行，没有发生裁剪
+-- Generate execution plan only, don't execute — no pruning occurred
 => explain select count(*) from lzlpartition1 where date_created=(select date_created from x);
                                             QUERY PLAN                                            
 --------------------------------------------------------------------------------------------------
@@ -1814,7 +1814,7 @@ INSERT 0 1
                Filter: (date_created = $0)
 (10 rows)
 
---执行sql，发生裁剪。关键字never executed
+-- Execute the SQL — pruning occurred. Notice the "never executed" keyword.
 => explain analyze select count(*) from lzlpartition1 where date_created=(select date_created from x);
                                                                  QUERY PLAN                                                                 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -1838,38 +1838,38 @@ INSERT 0 1
 
 ### Partition Wise Join
 
-partition wise join可以减少分区连接的代价。
-假设有两个分区表t1、t2，他们都有3个分区(p1,p2,p3)且分区定义一致，t1的每个分区10条数据，t2的每个分区20条数据：
+Partition wise join can reduce the cost of partition joins.
+Suppose there are two partitioned tables t1 and t2, both with 3 partitions (p1, p2, p3) with identical partition definitions. t1 has 10 rows per partition, t2 has 20 rows per partition:
 
 |                        | t1      | t2      |
 | ---------------------- | ------- | ------- |
 | p1                     | 10 rows | 20 rows |
 | p2                     | 10 rows | 20 rows |
 | p3                     | 10 rows | 20 rows |
-| 此时t1和t2表进行连接， |         |         |
+| When t1 and t2 join,   |         |         |
 
- - 正常情况下需要把所有两个分区数据取出进行连接，他们的行的连接比较次数为：
-   (10+10+10)\*(20+20+20)=180次
- - 有partition wise join的情况下，因为结构差不多，只需要连接对应的分区，如
-   t1.p1<=>t2.p1，
-   t1.p2<=>t2.p2，
-   t1.p3<=>t2.p3，
-   此时的连接比较次数为：
-   (10\*20)\*3=90次
+ - Normally, all data from both partitioned tables needs to be extracted for joining. The number of row comparison operations would be:
+   (10+10+10)\*(20+20+20)=180
+ - With partition wise join, since the structures are similar, only corresponding partitions need to be joined, e.g.:
+   t1.p1<=>t2.p1,
+   t1.p2<=>t2.p2,
+   t1.p3<=>t2.p3,
+   The number of row comparison operations becomes:
+   (10\*20)\*3=90
 
-在分区特别多的情况下，partition wise join的代价会小很多。
-参数`enable_partitionwise_join`：是否开启partition wise join，默认关闭
+When there are many partitions, the cost savings of partition wise join are significant.
+Parameter `enable_partitionwise_join`: whether to enable partition wise join, default is off.
 
-partition wise join的前提条件非常苛刻：
+The prerequisites for partition wise join are very strict:
 
-- 连接条件必须包含分区键
-- 分区键必须是相同的数据类型
-- 分区必须一一对应
+- The join condition must include the partition key.
+- The partition keys must be of the same data type.
+- Partitions must correspond one-to-one.
 
-看上去条件苛刻，两个不同的用途的表能产生partition wise join的情况是也是比较少的，比较常见的应该是两个表都是range时间分区。还有一种情况，如果是分区表自我连接，也符合partition wise join的前提：
+While these conditions seem strict, it's relatively rare for tables with different purposes to produce partition wise join scenarios. A common case would be both tables using RANGE time partitioning. Another scenario: a partitioned table self-joining also meets partition wise join prerequisites:
 
 ```sql
---未开启partition wise join的情况
+-- Without partition wise join enabled
 => explain select p1.*,p2.name from lzlpartition1 p1,lzlpartition1 p2 where p1.date_created=p2.date_created and p2.name='256ac66bb53d31bc6124294238d6410c';
                                                    QUERY PLAN                                                   
 ----------------------------------------------------------------------------------------------------------------
@@ -1895,7 +1895,7 @@ partition wise join的前提条件非常苛刻：
                            Index Cond: ((name)::text = '256ac66bb53d31bc6124294238d6410c'::text)
 (20 rows)
 
---开启partition wise join的情况
+-- With partition wise join enabled
 => set enable_partitionwise_join =on;
 SET
 
@@ -1930,35 +1930,35 @@ M=> explain select p1.*,p2.name from lzlpartition1 p1,lzlpartition1 p2 where p1.
 (25 rows)
 ```
 
-在没有开启partition wise join的情况下，优化器需要先访问分区表p2的所有分区数据（符合条件的）放一起(append)，然后与分区表p1的所有分区数据通过分区键连接(Hash Join)。
-在开启partition wise join的情况下，优化器将p1、p2两个分区表（实际上是一个，访问了两次）所对应的分区相连接：
+Without partition wise join enabled, the optimizer first accesses all partition data from p2 (matching the filter) and combines them (Append), then Hash Joins with all partition data from p1 through the partition key.
+With partition wise join enabled, the optimizer joins corresponding partitions from p1 and p2 (actually the same table accessed twice):
 p1_1<=>p2_1  Hash Join
 p1_2<=>p2_2  Hash Join
 p1_3<=>p2_3  Hash Join
-然后再把数据合到一起（append）。
-如果数据分区足够多，再加上分区裁剪，partition wise join会有很好的优化效果。
+Then combines the data together (Append).
+If there are enough data partitions, combined with partition pruning, partition wise join can have very good optimization effects.
 
 
 ### Partition Wise Grouping/Aggregation
 
-分区表在进行分区数据聚合计算时，分区可以各自算各自的，不需要扫描所有分区数据进行聚合计算，只需要各自分区的数据聚合计算完成后汇总返回即可。
-没有partition wise grouping本质上是“**先扫描所有分区，再聚合计算**”；有partition wise grouping是“**先分区聚合计算，再汇合数据**”。
+When performing aggregation on partitioned data, partitions can each compute independently — there is no need to scan all partition data for aggregation. Each partition computes its own aggregation, then the results are collected and returned.
+Without partition wise grouping, it's essentially "**scan all partitions first, then aggregate**." With partition wise grouping, it's "**aggregate per partition first, then combine results**."
 
-partition wise grouping的优势如下：
+Advantages of partition wise grouping:
 
-1. 分区在foreign server时，可以将聚合算子下推到foreign server
-2. 聚合到hash表时，每个分区而不是所有分区去使用内存hash表的空间，可以减少内存使用
-3. 聚合算法下方到各自的分区可以更好的使用索引、并行等等特性
-4. 更少的数据对比。虽然数据扫描都是一样的，但是减少了数据对比，比如最后一个分区的数据不需要与第一个分区的数据进行对比
+1. When partitions are on foreign servers, the aggregation operator can be pushed down to the foreign server.
+2. When aggregating into hash tables, each partition rather than the entire table uses the memory hash table space, reducing memory usage.
+3. Aggregation algorithms pushed down to individual partitions can better utilize features like indexes and parallelism.
+4. Fewer data comparisons. Although data scanning is the same, there are fewer data comparisons — for example, data from the last partition does not need to be compared with data from the first partition.
 
-参数`enable_partitionwise_aggregate`：是否开启partition wise grouping/aggregation，默认关闭
+Parameter `enable_partitionwise_aggregate`: whether to enable partition wise grouping/aggregation, default is off.
 
-partition wise aggregate示例：
+Partition wise aggregate example:
 
 ```sql
 =>   vacuum (analyze) lzlpartition1;
 
---未开启wise agg
+-- Without wise agg
 => set enable_partitionwise_aggregate =off;
 SET
 => explain select date_created,min(id),count(*)  from lzlpartition1  group by date_created  order by 1,2,3;
@@ -1974,7 +1974,7 @@ SET
                ->  Seq Scan on lzlpartition1_202304 lzlpartition1_3  (cost=0.00..14.50 rows=450 width=12)
 
 
---开启wise agg
+-- With wise agg enabled
 => set enable_partitionwise_aggregate =on;
 SET
 => explain select date_created,min(id),count(*)  from lzlpartition1  group by date_created  order by 1,2,3;
@@ -1995,17 +1995,17 @@ SET
 (12 rows)
 ```
 
-无wise aggregate时，先扫描所有数据再合并（Append），合并后再聚合计算（HashAggregate）；
-partition wise aggregate先在分区聚合计算（HashAggregate），然后在合并结果（Append）。
+Without partition wise aggregate: first scan all data then combine (Append), then aggregate (HashAggregate).
+With partition wise aggregate: first aggregate on each partition (HashAggregate), then combine results (Append).
 
-**partial aggregation**
-聚合算法可以下放到分区上进行计算，此时聚合后的数据分为两种情况：聚合数据不重复（group包含分区键），聚合数据有重复（group不包含分区键）。
-当聚合数据不重复时，只需要把各自分区算出来的聚合数据简单的加到一起（append）即可（就像上面的案例）；当各自分区算出来的聚合数据重复时，仍然需要再聚合计算一次（Finalize Aggregate）。不包含分区键的聚合计算就是partial aggregation。
+**Partial Aggregation**
+The aggregation algorithm can be pushed down to partitions for computation. At this point, the aggregated results fall into two categories: non-duplicate aggregation data (GROUP BY includes the partition key), and duplicate aggregation data (GROUP BY does not include the partition key).
+When aggregation data is non-duplicate, simply appending the per-partition computed aggregation data is sufficient (as in the example above). When per-partition aggregation data has duplicates, an additional aggregation step (Finalize Aggregate) is needed. Aggregation that does not include the partition key is partial aggregation.
 
-partial aggregation示例：
+Partial aggregation example:
 
 ```sql
---group by不是分区键时
+-- When GROUP BY is not the partition key
 => show enable_partitionwise_aggregate;
  enable_partitionwise_aggregate 
 --------------------------------
@@ -2028,9 +2028,9 @@ partial aggregation示例：
 
 ```
 
-group by不包含分区键，也可以进行聚合计算，但是必须在稍后总聚合Finalize HashAggregate
+When GROUP BY does not include the partition key, aggregation can still be performed, but a subsequent Finalize HashAggregate is required.
 
-即使没有group by，也可能发生Partial Aggregate：
+Even without GROUP BY, Partial Aggregate can still occur:
 
 ```sql
 => show enable_partitionwise_aggregate;
@@ -2063,69 +2063,69 @@ group by不包含分区键，也可以进行聚合计算，但是必须在稍后
              
 ```
 
-触发Partial Aggregate的前提不是group。应从Partial Aggregate的目的去考虑，它的目的是把聚合下放到分区，那么没有group的聚合其实也可以这么做，就像上面两个例子：他们都是在分区上聚合计算后（Partial Aggregate），汇总到一起再聚合计算一次（ Finalize Aggregate）；如果没有打开参数，这些聚合发生在扫描完所有分区后。
+The precondition for triggering Partial Aggregate is not GROUP BY. We should think from the purpose of Partial Aggregate — it aims to push aggregation down to partitions. Aggregation without GROUP BY can also be done this way, as shown in the two examples above: they both compute aggregation on each partition first (Partial Aggregate), then combine and aggregate once more (Finalize Aggregate). Without the parameter enabled, these aggregations would occur after scanning all partitions.
 
 
 
 
 
-## History of PostgreSQL Partitioned Tables
 
-声明式分区经过了多个版本的增强，如今已非常成熟。对于历史版本的声明式分区，功能增强如下：
+## History of Partitioned Tables
 
-**PG9.6以前**
+Declarative partitioning has gone through many version enhancements and is now very mature. Here's a summary of declarative partitioning feature enhancements across PostgreSQL versions:
 
-- 只能继承表实现分区功能
+**Pre-PG9.6**
+
+- Only inheritance tables could implement partitioning functionality.
 
 **PG10**
 
-- 支持声明式分区
-- 支持range、list分区
-- 支持attach/detach表分区
-- 支持分区裁剪
+- Declarative partitioning supported.
+- RANGE and LIST partitioning supported.
+- ATTACH/DETACH table partitions supported.
+- Partition pruning supported.
 
 **PG11**
 
-- 增加支持HASH分区
-- 支持创建主键、外键、索引、触发器
-- 支持update分区键、自动创建分区上的索引 
-- 支持default分区
-- 支持attach索引
-- 支持FOR EACH ROW触发器，自动在已有/未来的子分区上创建
-- 新增enable_partition_pruning参数；裁剪增强
-- 支持partition wise join
-- 支持partition wise aggregation
+- Added HASH partition support.
+- Support for creating primary keys, foreign keys, indexes, and triggers.
+- Support for updating partition key; automatic creation of indexes on partitions.
+- Support for DEFAULT partition.
+- Support for ATTACH index.
+- Support for FOR EACH ROW triggers, automatically created on existing and future child partitions.
+- New `enable_partition_pruning` parameter; pruning enhancements.
+- Support for partition wise join.
+- Support for partition wise aggregation.
 
 **PG12**
 
-- 增强查询、插入、pruning、COPY性能
-- 支持外键约束to分区表
-- 支持非阻塞分区表ATTACH:`ALTER TABLE ATTACH PARTITION`
+- Enhanced query, insert, pruning, and COPY performance.
+- Support for foreign key constraints referencing partitioned tables.
+- Support for non-blocking partition ATTACH: `ALTER TABLE ATTACH PARTITION`.
 
 **PG13**
 
-- 增强pruning
-- 增强partition wise join
-- 支持BEFORE triggers
-- 支持发布分区表；支持订阅写入分区表
+- Enhanced pruning.
+- Enhanced partition wise join.
+- Support for BEFORE triggers.
+- Support for publishing partitioned tables; support for subscribing and writing to partitioned tables.
 
 **PG14**
 
-- 增强update、delete性能
-- 支持非阻塞分区表DETACH：`ALTER TABLE ... DETACH PARTITION ... CONCURRENTLY`
-- 支持reindex分区表的索引
+- Enhanced UPDATE and DELETE performance.
+- Support for non-blocking partition DETACH: `ALTER TABLE ... DETACH PARTITION ... CONCURRENTLY`.
+- Support for REINDEX on partitioned table indexes.
 
 **PG15**
 
-- 增强执行计划生成，减少多分区时执行计划生成时间
-- 增强排序
-- 支持cluster分区表
+- Enhanced execution plan generation, reducing generation time with many partitions.
+- Enhanced sorting.
+- Support for CLUSTER on partitioned tables.
 
 **PG16**
 
-- 增强generated列的限制，主表有generated列子分区也必须包含。
-- 增强查找range、list分区
-
+- Enhanced GENERATED column restrictions: if the parent table has a generated column, child partitions must also include it.
+- Enhanced lookup for RANGE and LIST partitions.
 
 
 
@@ -2151,3 +2151,4 @@ http://www.pgsql.tech/article_0_10000102
 
 https://brandur.org/fragments/postgres-partitioning-2022
 
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

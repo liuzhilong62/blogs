@@ -1223,3 +1223,4 @@ https://www.pgcon.org/2019/schedule/attachments/514_introduction-memory-contexts
 
 
 > Original article: https://lastdba.com/2024/08/12/postgresql内存浅析/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

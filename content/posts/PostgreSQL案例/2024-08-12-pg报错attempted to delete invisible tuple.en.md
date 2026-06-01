@@ -300,3 +300,4 @@ https://wiki.postgresql.org/wiki/Visibility_Map_Problems
 https://www.interdb.jp/pg/pgsql06.html
 
 https://www.interdb.jp/pg/pgsql07.html
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

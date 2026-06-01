@@ -199,3 +199,4 @@ Looking back at these 70 slides, the most interesting part isn't any single demo
 The real MCP mechanism — tool definitions inserted as text into the system prompt, the LLM using semantic understanding to decide which tool to call, outputting tool call JSON — needs none of the vector embedding model from the theory layer. Between the two layers, Bruce didn't draw the connecting line. This might not be a bug — it might be a feature.
 
 *This article was originally published in Chinese on [lastdba.com](https://lastdba.com).*
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

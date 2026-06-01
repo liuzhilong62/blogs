@@ -848,3 +848,4 @@ Based on the paper, DiskANN's execution efficiency and recall outperform IVF and
 [^80]: Jianshu [LSH (Locality Sensitive Hashing) Algorithm](https://www.jianshu.com/p/d4368c8f40cb) 
 
 > Original article (Chinese): [向量数据库相关概念](https://lastdba.com/2024/08/12/向量数据库：从0到original-paper/)
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

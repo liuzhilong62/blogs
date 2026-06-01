@@ -309,3 +309,4 @@ Both trigger_file and pg_ctl promote can activate the standby with a single comm
 <https://blog.51cto.com/lishiyan/2460518?source=dra>
 
 > Original article: https://lastdba.com/2024/08/13/postgresql流复制/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

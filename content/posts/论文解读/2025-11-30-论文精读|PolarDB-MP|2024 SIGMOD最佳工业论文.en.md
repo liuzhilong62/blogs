@@ -341,3 +341,4 @@ Sometimes 30% shared data, sometimes 50% — not very rigorous. The original [Ta
 Not much to summarize — see the *Foreword and Abstract* and *PMFS Summary* sections.
 
 > Original link: https://lastdba.com/2025/11/30/论文精读polar-db-mp2024-sigmod最佳工业论文/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

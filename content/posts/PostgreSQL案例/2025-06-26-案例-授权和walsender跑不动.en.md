@@ -319,3 +319,4 @@ Long-term fix: Upgrade to PG14+ (tested — extremely fast with no lag).
 <https://www.postgresql.org/message-id/flat/17716-1fe42e7b44fc2f25%40postgresql.org>
 
 <https://git.postgresql.org/gitweb/?p=postgresql.git;a=commitdiff;h=d7eb52d71>
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

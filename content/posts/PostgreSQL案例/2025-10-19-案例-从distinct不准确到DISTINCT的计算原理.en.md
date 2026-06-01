@@ -186,3 +186,4 @@ select attrelid::regclass,attname,attstattarget from pg_attribute where attrelid
 ## Summary
 
 For large tables where columns are non-unique but have high distinct counts (a realistic scenario), the sampling algorithm underestimates the DISTINCT value, and this is positively correlated with the sampling ratio. The default sampling ratio is too small for large tables. You can increase it, but even the maximum is not that large.
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

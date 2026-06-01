@@ -422,3 +422,4 @@ SQL> select * from oralzl.tab1;
 ```
 
 > Original link: https://lastdba.com/2024/08/13/ogg搭建pg-oracle同步实操步骤/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

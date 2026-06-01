@@ -261,3 +261,4 @@ PolarDB-CXL disadvantages:
 - The paper quality isn't actually as high as the MP paper — it mainly revolves around solutions for the CXL 2.0 switch physical hardware, which differs from the extensive database-layer design found in the PolarDB-MP paper.
 
 > Original link: https://lastdba.com/2025/11/30/论文精读polar-db-cxl2025-sigmod最佳工业论文/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

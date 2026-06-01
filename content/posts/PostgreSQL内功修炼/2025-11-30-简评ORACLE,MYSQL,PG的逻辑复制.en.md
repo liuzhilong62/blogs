@@ -5,8 +5,6 @@ categories: [PostgreSQL内功修炼]
 description: "A horizontal comparison of logical replication architectures and their pros and cons across Oracle, MySQL, and PostgreSQL, with an in-depth evaluation of each database's replication philosophy."
 ---
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*
-
 ### PostgreSQL Logical Replication
 ​​​​![在这里插入图片描述](/img/csdn/64e1d30f2123.png)
 （https://www.pgconf.asia/JA/2017/wp-content/uploads/sites/2/2017/12/D2-A7-EN.pdf）
@@ -49,3 +47,4 @@ Disadvantages of the Oracle approach:
 - Relies on third-party software to manage replication links.
 
 In summary, PG's logical replication is an all-in-one, do-everything approach — very much in the open-source, technical spirit. MySQL's approach is simple, crude, but effective — somewhat "one-step-to-finish." Oracle's approach is: provide an interface and leave everything else to third parties, but from the customer's perspective, there is a mature solution available.
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

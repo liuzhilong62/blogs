@@ -5,8 +5,6 @@ categories: [PostgreSQL内功修炼]
 description: "An in-depth exploration of PostgreSQL transaction mechanisms and MVCC implementation, covering isolation levels, row-level locks, and multi-version concurrency control without UNDO."
 ---
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*
-
 **PostgreSQL Transactions**
 
 To guarantee the ACID properties of transactions, RDBMS must implement concurrency control. PostgreSQL, Oracle, and MySQL (InnoDB) all use MVCC for concurrency control. MVCC achieves concurrency by continuously generating new version objects when data changes while allowing queries to access a certain range of older versions. MVCC stores a snapshot of data at a point in time, and reads select an appropriate version to read.
@@ -3227,3 +3225,4 @@ https://mp.weixin.qq.com/s/j-8uRuZDRf4mHIQR_ZKIEg
 https://blog.csdn.net/postgrechina/article/details/49130743?spm=a2c6h.12873639.article-detail.7.41b32cda2KR1QM
 
 http://mysql.taobao.org/monthly/2018/12/02/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

@@ -22,5 +22,12 @@ params:
       - x-twitter: "https://x.com/liuzhilong62"
       - email: "mailto:liuzhilong62@outlook.com"
 
+  homepage:
+    featuredArticles:
+      - "PostgreSQL Operations Experience 2025"
+      - "PostgreSQL Transactions Deep Dive"
+      - "PostgreSQL DDL Pitfalls and Clever Solutions"
+      - "Case Study: Startup Failure and SysV Shared Memory"
+
   license: "CC BY-NC-SA 4.0"
   licenseURL: "https://creativecommons.org/licenses/by-nc-sa/4.0/"

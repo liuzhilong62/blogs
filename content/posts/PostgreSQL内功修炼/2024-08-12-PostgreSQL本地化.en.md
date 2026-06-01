@@ -838,3 +838,4 @@ https://baike.baidu.com/item/%E4%B8%AD%E6%97%A5%E9%9F%A9%E8%B6%8A%E7%BB%9F%E4%B8
 https://blog.csdn.net/songyundong1993/article/details/128739919
 
 > Original article (Chinese): [PostgreSQL本地化](https://lastdba.com/2024/08/12/postgresql本地化/)
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

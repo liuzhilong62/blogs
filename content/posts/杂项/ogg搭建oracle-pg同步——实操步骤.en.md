@@ -552,3 +552,4 @@ Commit complete.
 Check target — data synchronized successfully.
 
 > Original link: https://lastdba.com/2024/08/13/ogg搭建oracle-pg同步实操步骤/
+*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

@@ -28,11 +28,6 @@ homepage:
   showMoreLinkDest: "/posts/"
   cardView: true
   cardViewScreenWidth: false
-  featuredArticles:
-    - "pg数据库运维经验2025"
-    - "PostgreSQL事务浅析"
-    - "PostgreSQL DDL变更的坑和巧妙方案"
-    - "案例-起库失败和sysv共享内存"
 
 article:
   showDate: true
