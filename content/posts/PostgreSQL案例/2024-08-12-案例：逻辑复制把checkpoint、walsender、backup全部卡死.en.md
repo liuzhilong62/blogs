@@ -1,7 +1,7 @@
 ---
 title: "Case Study: Logical Replication Deadlocks Checkpoint, Walsender, and Backup"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Troubleshooting a cascading hang where logical replication walsender exhausts memory, triggers replication_slot_io waits, and blocks both checkpoint and backup processes"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "CXL and PolarDB-CXL"
 date: 2025-11-30
-categories: [论文解读]
+categories: [Paper Reviews]
 description: "A deep reading of SIGMOD 2025 Best Industrial Paper PolarDB-CXL: introducing CXL disaggregated memory to PolarDB-MP, comparing RDMA architecture and showcasing CXL's advantages in latency and memory fusion"
 ---
 

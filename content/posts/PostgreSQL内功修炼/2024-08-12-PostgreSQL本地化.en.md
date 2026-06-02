@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Localization"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A systematic deep dive into PostgreSQL localization mechanisms, covering locale, collation rules, character set principles, and their impact on query behavior."
 ---
 

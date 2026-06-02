@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL CLOG Files and Standby Synchronization Analysis"
 date: 2024-09-03
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "An in-depth analysis of PostgreSQL CLOG file structure and transaction status storage principles, including transaction ID location and standby synchronization mechanisms."
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Case: From Inaccurate DISTINCT to the Principles of DISTINCT Estimation"
 date: 2025-10-19
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analysis of severely inaccurate n_distinct statistics, deep dive into the Haas-Stokes DISTINCT estimation algorithm in PostgreSQL source code and its estimation bias when sample size is much smaller than total rows"
 ---
 

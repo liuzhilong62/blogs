@@ -1,7 +1,7 @@
 ---
 title: "Case: GRANT Authorization Causes Walsender to Hang"
 date: 2025-06-26
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analysis of GRANT authorization causing walsender to freeze: massive pg_class changes from bulk GRANT produce huge numbers of invalidation messages; logical decoding stalls due to pathman plugin's slow hash table traversal during invalidation processing"
 ---
 

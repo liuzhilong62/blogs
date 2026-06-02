@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Streaming Replication"
 date: 2024-08-13
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "An in-depth analysis of PostgreSQL streaming replication principles and process architecture, covering synchronous and asynchronous modes and failover switchover mechanisms."
 ---
 

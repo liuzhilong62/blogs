@@ -1,7 +1,7 @@
 ---
 title: "Case Study: Predicate Out-of-Bounds and Prepared Statement Issues in PostgreSQL"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing the root cause of wrong index selection in execution plans: stale statistics at month-end causing predicate out-of-bounds, combined with prepared statement caching preventing plan updates even after ANALYZE."
 ---
 

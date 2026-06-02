@@ -2,8 +2,8 @@
 title: "UUID v4 and v7: Collision Incidents and Performance Benchmarks"
 date: 2026-05-29
 draft: false
-categories: ["PostgreSQL内功修炼"]
-tags: ["PostgreSQL", "UUID", "性能", "索引"]
+categories: ["PostgreSQL Internals"]
+tags: ["PostgreSQL", "UUID", "Performance", "Indexing"]
 description: "A real UUID v4 collision on HackerNews sparked 479 upvotes and 347 comments. Combined with UUID v4 vs v7 performance benchmarks on PG 16, here's how to choose."
 ---
 

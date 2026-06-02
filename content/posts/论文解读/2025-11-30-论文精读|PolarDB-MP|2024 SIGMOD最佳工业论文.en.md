@@ -1,7 +1,7 @@
 ---
 title: "Paper Deep Read: PolarDB-MP | 2024 SIGMOD Best Industrial Paper"
 date: 2025-11-30
-categories: [论文解读]
+categories: [Paper Reviews]
 description: "A deep reading of SIGMOD 2024 Best Industrial Paper PolarDB-MP: a multi-primary cloud-native database based on disaggregated shared memory and RDMA, solving the single-primary write bottleneck"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "ORDER BY LIMIT 10 Slower Than ORDER BY LIMIT 100"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing the counterintuitive phenomenon where a smaller ORDER BY LIMIT value runs slower, caused by the optimizer underestimating the cost of a backward index scan and choosing the wrong index"
 ---
 

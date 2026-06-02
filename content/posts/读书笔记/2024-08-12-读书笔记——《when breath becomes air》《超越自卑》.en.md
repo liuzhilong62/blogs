@@ -1,7 +1,7 @@
 ---
 title: "Book Notes — When Breath Becomes Air & What Life Should Mean to You"
 date: 2024-08-12
-categories: [读书笔记]
+categories: [Reading Notes]
 description: "Reading notes on When Breath Becomes Air and What Life Should Mean to You — a surgeon's reflections on terminal cancer, and the core ideas of Adlerian individual psychology"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Book Notes — Educated and Atomic Habits"
 date: 2024-08-13
-categories: [读书笔记]
+categories: [Reading Notes]
 description: "Notes on Educated and Atomic Habits: a legendary true story of how education transforms destiny, and the scientific methodology of building good habits"
 ---
 

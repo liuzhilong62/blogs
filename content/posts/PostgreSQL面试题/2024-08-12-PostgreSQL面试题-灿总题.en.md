@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Interview Questions - Comprehensive Collection"
 date: 2024-08-12
-categories: [PostgreSQL面试题]
+categories: [PostgreSQL Interview Questions]
 description: "A comprehensive collection of PostgreSQL interview questions covering MVCC implementation vs Oracle, table bloat principles, vacuum mechanisms, and core PostgreSQL knowledge"
 ---
 

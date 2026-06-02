@@ -1,7 +1,7 @@
 ---
 title: "PG Shutdown Logic and Walsender Blocking Shutdown Analysis"
 date: 2025-01-04
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Deep source code analysis of PG shutdown flow and signal mechanisms, troubleshooting why walsender blocks fast shutdown: logical replication walsender cannot respond to SIGTERM while waiting for consumer feedback"
 ---
 

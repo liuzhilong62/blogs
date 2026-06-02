@@ -1,7 +1,7 @@
 ---
 title: "A Brief Analysis of PostgreSQL TRUNCATE"
 date: 2024-08-12
-categories: [PostgreSQL源码解析]
+categories: [PostgreSQL Source Code]
 description: "Comprehensive analysis of PostgreSQL TRUNCATE command options, including ONLY inheritance behavior, RESTART/CONTINUE IDENTITY sequence reset, and CASCADE behavior"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "OGG PostgreSQL-to-Oracle Sync — Hands-On Steps"
 date: 2024-08-13
-categories: [杂项]
+categories: [Miscellaneous]
 description: "Complete hands-on steps for setting up Oracle GoldenGate PostgreSQL-to-Oracle data synchronization, covering environment configuration, OGG installation, and sync link creation"
 ---
 

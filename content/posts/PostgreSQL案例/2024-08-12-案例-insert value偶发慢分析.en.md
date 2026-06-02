@@ -1,7 +1,7 @@
 ---
 title: "Case Study: Analyzing Occasional Slow INSERT VALUES"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing why INSERT VALUES occasionally became slow. Through wait event analysis, the root cause was identified as WALWrite lock contention, where WAL flushing became the bottleneck under heavy concurrent writes."
 ---
 

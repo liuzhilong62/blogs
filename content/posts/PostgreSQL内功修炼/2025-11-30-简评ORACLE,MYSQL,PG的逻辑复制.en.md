@@ -1,7 +1,7 @@
 ---
 title: "A Brief Review of Logical Replication in Oracle, MySQL, and PostgreSQL"
 date: 2025-11-30
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A horizontal comparison of logical replication architectures and their pros and cons across Oracle, MySQL, and PostgreSQL, with an in-depth evaluation of each database's replication philosophy."
 ---
 

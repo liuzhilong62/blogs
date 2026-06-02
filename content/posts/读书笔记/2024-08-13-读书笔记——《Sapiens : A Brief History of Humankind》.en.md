@@ -1,7 +1,7 @@
 ---
 title: "Book Notes — Sapiens: A Brief History of Humankind"
 date: 2024-08-13
-categories: [读书笔记]
+categories: [Reading Notes]
 description: "Notes on Sapiens: from the Cognitive Revolution to money and empire, how Homo sapiens built civilization through the power of fiction, exploring humanity's grand journey from animals to gods"
 ---
 

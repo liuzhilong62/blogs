@@ -1,7 +1,7 @@
 ---
 title: "A Brief Analysis of PostgreSQL Memory"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A detailed explanation of PostgreSQL's shared memory architecture, covering shared_buffers, WAL buffer, CLOG buffer, and the Linux shared memory implementation mechanism."
 ---
 

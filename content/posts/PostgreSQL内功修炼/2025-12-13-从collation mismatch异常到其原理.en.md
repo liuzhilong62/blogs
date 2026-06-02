@@ -1,7 +1,7 @@
 ---
 title: "From collation mismatch Exception to Its Principles"
 date: 2025-12-13
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "Starting from the collation mismatch exception, this article dives deep into PostgreSQL collation version management and the principles of operating system libc dependencies."
 ---
 

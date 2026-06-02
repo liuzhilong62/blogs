@@ -1,7 +1,7 @@
 ---
 title: "A Deep Dive into PostgreSQL Transactions"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "An in-depth analysis of PostgreSQL's transaction mechanism and MVCC implementation, covering isolation levels, row-level locks, and multi-version concurrency control without undo."
 ---
 

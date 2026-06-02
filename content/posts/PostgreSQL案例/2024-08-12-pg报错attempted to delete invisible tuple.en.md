@@ -1,7 +1,7 @@
 ---
 title: "PG Error: attempted to delete invisible tuple"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analysis of DELETE throwing 'attempted to delete invisible tuple' while SELECT works fine, tracing through source code to identify VM file corruption as the root cause of the visibility check anomaly"
 ---
 

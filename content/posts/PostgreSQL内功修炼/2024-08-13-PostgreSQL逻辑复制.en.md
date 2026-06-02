@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Logical Replication"
 date: 2024-08-13
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A detailed explanation of PostgreSQL logical replication mechanisms, covering logical decoding, replication slots, output plugins, and publish/subscribe architecture."
 ---
 

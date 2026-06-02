@@ -1,7 +1,7 @@
 ---
 title: "How Does PG Access Basic System Tables Before pg_class Exists?"
 date: 2024-08-12
-categories: [PostgreSQL源码解析]
+categories: [PostgreSQL Source Code]
 description: "Analysis of PostgreSQL's mechanism for initializing the data dictionary via BKI files in bootstrap mode, answering how basic system tables are accessed when pg_class doesn't exist yet"
 ---
 

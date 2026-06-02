@@ -1,7 +1,7 @@
 ---
 title: "Why Is 'partition of' Slow When There's No Blocking?"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Root cause analysis of a 35-minute partition creation: a 50GB default partition requires full data validation when adding a new partition to ensure no range conflicts"
 ---
 

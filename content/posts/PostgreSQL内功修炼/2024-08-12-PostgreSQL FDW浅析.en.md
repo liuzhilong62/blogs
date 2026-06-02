@@ -1,7 +1,7 @@
 ---
 title: "A Brief Analysis of PostgreSQL FDW"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "In-depth analysis of PostgreSQL FDW (Foreign Data Wrapper) principles and usage, covering the SQL/MED standard, four FDW objects, and common FDW extensions"
 ---
 

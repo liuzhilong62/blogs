@@ -1,7 +1,7 @@
 ---
 title: "Case Study: Row Locks and LWLock LockManager"
 date: 2025-12-21
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing how high-concurrency updates on the same row cause massive row locks and LWLock LockManager waits, verifying through benchmarks that row locks bypassing the fastpath mechanism is the root cause of increased LWLock contention"
 ---
 

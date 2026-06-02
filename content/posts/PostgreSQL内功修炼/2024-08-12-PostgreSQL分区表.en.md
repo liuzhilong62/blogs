@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Table Partitioning Deep Dive"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A comprehensive guide to PostgreSQL declarative partitioning, partition maintenance strategies, and query optimization techniques."
 ---
 

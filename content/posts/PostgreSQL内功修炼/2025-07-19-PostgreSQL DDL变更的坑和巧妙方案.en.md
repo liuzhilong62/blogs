@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL DDL Pitfalls and Clever Solutions"
 date: 2025-07-19
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "A summary of common PostgreSQL DDL change pitfalls and clever workarounds — a quick-reference cheat sheet."
 ---
 

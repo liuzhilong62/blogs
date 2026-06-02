@@ -1,7 +1,7 @@
 ---
 title: "Too Many Range Table Entries Even with Not-That-Many Partitions"
 date: 2024-08-12
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing why UPDATE fails with 'too many range table entries' while SELECT succeeds: UPDATE triggers all partitions in the plan, causing range table entries to exceed the 65000 limit"
 ---
 

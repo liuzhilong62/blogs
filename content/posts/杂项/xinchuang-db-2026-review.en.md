@@ -2,7 +2,7 @@
 title: "A DBA's Perspective on the 0526 Approved Database List"
 date: 2026-05-29
 draft: false
-categories: ["杂项"]
+categories: ["Miscellaneous"]
 tags: ["Xinchuang", "Domestic Databases", "Approved List"]
 description: "The 2026 No.2 Xinchuang database list released: 23 products pass, Ping An, UnionPay, China Mobile, and China Telecom self-developed databases debut. A DBA's interpretation and reflections."
 ---

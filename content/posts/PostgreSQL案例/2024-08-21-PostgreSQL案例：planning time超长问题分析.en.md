@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL Case Study: Analysis of Abnormally Long Planning Time"
 date: 2024-08-21
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing near-1-second planning time and over 1 million planning shared hits — root cause is pg_statistic table bloat causing backends to cache excessive dead tuple data during CatCacheMiss on first SQL execution"
 ---
 

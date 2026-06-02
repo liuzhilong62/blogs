@@ -1,7 +1,7 @@
 ---
 title: "Case Study: Performance Degradation After Adding an Index and the Generic Plan"
 date: 2025-09-13
-categories: [PostgreSQL案例]
+categories: [PostgreSQL Cases]
 description: "Analyzing a case where performance dropped after adding an index: the new index caused the optimizer to choose a different execution path, and the cached generic plan prevented ANALYZE from updating the erroneous cached plan"
 ---
 

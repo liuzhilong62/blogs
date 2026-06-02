@@ -1,7 +1,7 @@
 ---
 title: "History of Transactions and SSI — PostgreSQL Database Technology Summit Chengdu Stop Sharing"
 date: 2024-08-12
-categories: [杂项]
+categories: [Miscellaneous]
 description: "A sharing at the PostgreSQL Technology Summit Chengdu stop, covering the history of transactions, flaws in the ANSI SQL-92 standard, and the implementation of SSI (Serializable Snapshot Isolation) in PostgreSQL"
 ---
 

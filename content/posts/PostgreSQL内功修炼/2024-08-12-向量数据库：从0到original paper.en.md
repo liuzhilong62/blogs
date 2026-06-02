@@ -1,7 +1,7 @@
 ---
 title: "Vector Database Core Concepts"
 date: 2024-08-12
-categories: [PostgreSQL内功修炼]
+categories: [PostgreSQL Internals]
 description: "Explaining vector database core concepts from the ground up, covering embeddings, RAG (Retrieval-Augmented Generation), and LLM fundamentals."
 ---
 

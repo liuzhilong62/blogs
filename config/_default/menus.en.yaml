@@ -3,19 +3,19 @@ main:
     pageRef: "/"
     weight: 10
   - name: "Cases"
-    pageRef: "categories/postgresql案例"
+    pageRef: "categories/postgresql-cases"
     weight: 20
   - name: "Internals"
-    pageRef: "categories/postgresql内功修炼"
+    pageRef: "categories/postgresql-internals"
     weight: 30
   - name: "Source"
-    pageRef: "categories/postgresql源码解析"
+    pageRef: "categories/postgresql-source-code"
     weight: 40
   - name: "Papers"
-    pageRef: "categories/论文解读"
+    pageRef: "categories/paper-reviews"
     weight: 50
   - name: "Notes"
-    pageRef: "categories/读书笔记"
+    pageRef: "categories/reading-notes"
     weight: 60
   - name: "About"
     pageRef: "about"

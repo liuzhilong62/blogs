@@ -110,7 +110,7 @@ hugo --quiet && git add -A && git commit -m "post: 标题" && git push
 ### 注意事项
 
 - 中文 frontmatter 和英文 frontmatter 各写各的（title/description 各自语言）
-- `categories` 和 `tags` 保留中文（Hugo taxonomy，跨语言共享）
+- `categories` 和 `tags` 在英文文章中必须使用英文翻译值，中文文章保留中文。Hugo taxonomy 按值分离，中英文各自有独立的分类体系。
 - 代码块、SQL、图片路径中英文版本完全一致，不要改动
 - 英文文章末尾加 `*Originally published in Chinese on [lastdba.com](https://lastdba.com).*`
 - **精选文章 (featured)**: 配置在 `languages.zh.yaml` / `languages.en.yaml` 的 `params.homepage.featuredArticles`，**不在**共享 `params.yaml` 中。中英文各写各的标题，保持两边文章对应一致。Hugo 按语言自动选用对应列表。
@@ -189,7 +189,8 @@ showHero: false
 ```
 
 - `categories`: 必须是以下之一 —
-  `PostgreSQL案例`, `PostgreSQL内功修炼`, `PostgreSQL源码解析`, `PostgreSQL面试题`, `论文解读`, `读书笔记`, `AIOps`, `杂项`
+  中文: `PostgreSQL案例`, `PostgreSQL内功修炼`, `PostgreSQL源码解析`, `PostgreSQL面试题`, `论文解读`, `读书笔记`, `AIOps`, `杂项`
+  英文: `PostgreSQL Cases`, `PostgreSQL Internals`, `PostgreSQL Source Code`, `PostgreSQL Interview Questions`, `Paper Reviews`, `Reading Notes`, `AIOps`, `Miscellaneous`
 - `description`: 必填, 20-60 字中文。用于首页卡片 (card.html) 和分类页 (simple.html) 的摘要显示
 - `showHero`: 默认 false。hero 背景被用户否决过, 不要开启
 - `draft: true` 的文章不会发布, 但 `hugo server -D` 本地可见
