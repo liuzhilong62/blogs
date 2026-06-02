@@ -25,7 +25,7 @@ params:
   homepage:
     featuredArticles:
       - "PostgreSQL Operations Experience 2025"
-      - "PostgreSQL Transactions Deep Dive"
+      - "A Deep Dive into PostgreSQL Transactions"
       - "PostgreSQL DDL Pitfalls and Clever Solutions"
       - "Case Study: Startup Failure and SysV Shared Memory"
 
