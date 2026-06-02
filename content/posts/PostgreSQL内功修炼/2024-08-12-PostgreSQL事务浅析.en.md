@@ -3218,4 +3218,3 @@ Other resources:
 
 <http://mysql.taobao.org/monthly/2018/12/02/>
 
-*Originally published in Chinese on [lastdba.com](https://lastdba.com).*

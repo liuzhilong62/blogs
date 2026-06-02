@@ -13,4 +13,3 @@ May be updated, may not be.
 
 Feedback welcome — pick it apart if you can.
 
-*This article was originally published in Chinese on [lastdba.com](https://lastdba.com).*

@@ -112,7 +112,7 @@ hugo --quiet && git add -A && git commit -m "post: 标题" && git push
 - 中文 frontmatter 和英文 frontmatter 各写各的（title/description 各自语言）
 - `categories` 和 `tags` 在英文文章中必须使用英文翻译值，中文文章保留中文。Hugo taxonomy 按值分离，中英文各自有独立的分类体系。
 - 代码块、SQL、图片路径中英文版本完全一致，不要改动
-- 英文文章末尾加 `*Originally published in Chinese on [lastdba.com](https://lastdba.com).*`
+- ~~英文文章末尾加 originally published 声明~~（已全部删除，不再需要）
 - **精选文章 (featured)**: 配置在 `languages.zh.yaml` / `languages.en.yaml` 的 `params.homepage.featuredArticles`，**不在**共享 `params.yaml` 中。中英文各写各的标题，保持两边文章对应一致。Hugo 按语言自动选用对应列表。
 
 ## 写文章工作流
