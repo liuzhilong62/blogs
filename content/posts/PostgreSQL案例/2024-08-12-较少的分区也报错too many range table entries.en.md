@@ -346,7 +346,7 @@ MySQL's two execution plans are identical. However, the driving table selection 
 ### Bug Description
 <https://postgrespro.com/list/thread-id/2482006>
 
-This bug is easy to find via the error. It was submitted by digoal (德哥) back in 2020, followed by discussion between two source code experts. The discussion is lengthy, but to summarize: PG does not support unlimited partitions, which is understandable in the real world — too many partitions can cause rapid performance degradation. However, the community still felt the limit needed adjustment and discussed the `INNER_VAR`, `Var.varno` values in the source code.
+This bug is easy to find via the error. It was submitted by digoal (De Ge) back in 2020, followed by discussion between two source code experts. The discussion is lengthy, but to summarize: PG does not support unlimited partitions, which is understandable in the real world — too many partitions can cause rapid performance degradation. However, the community still felt the limit needed adjustment and discussed the `INNER_VAR`, `Var.varno` values in the source code.
 
 ### Misleading Nature
 The bug title is somewhat misleading: *BUG #16302: too many range table entries - when count partition table(65538 childs)*

@@ -8,7 +8,7 @@ description: "Reading notes on When Breath Becomes Air and What Life Should Mean
 ## Why Write About Two Books Together?
 Normally I'd write separate pieces after finishing these two books, but I figured neither would yield all that much content. Although I've read a few English originals (and written about them), I clearly underestimated the difficulty of *When Breath Becomes Air*. It's packed with unfamiliar vocabulary — loads of medical terms I'd never encountered. I basically forced my way through it with half-understanding. As for *What Life Should Mean to You*... it doesn't feel as miraculous as people say. After all, it's a century old — I didn't extract much nourishment from it (a little, though). To avoid the awkwardness of too-thin content, I'm lumping them together.
 
-![在这里插入图片描述](/img/csdn/6f97f7438495.png)
+![](/img/csdn/6f97f7438495.png)
 
 ## When Breath Becomes Air
 The author was a surgeon with extraordinary achievements in medicine. At the peak of his career, he learned he had terminal cancer. Less than two years after the diagnosis, he passed away. This book was written during those two years. It describes, from a first-person perspective, how one confronts such misfortune as cancer and reflects on life and its meaning in one's final days.
@@ -24,7 +24,7 @@ I seem to be different — I live in the future, never now! If I go die right no
 
 (His experience inevitably reminds me of the Japanese drama *The White Tower* — an absolutely brilliant show! Professor Zaizen, at the peak of his career, gets cancer and ultimately donates his body for cancer pathology research...)
 
-![在这里插入图片描述](/img/csdn/0b8ac609261a.png)
+![](/img/csdn/0b8ac609261a.png)
 
 ## What Life Should Mean to You (Beyond Inferiority)
 A famous work in psychology by Alfred Adler, founder of individual psychology. Long ago, I watched an episode of *Lao Gao and Xiao Mo* about Adler and individual psychology — they made it sound almost miraculous. I couldn't resist reading it, and figured I might even analyze myself a bit.

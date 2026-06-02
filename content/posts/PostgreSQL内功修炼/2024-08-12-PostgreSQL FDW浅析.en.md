@@ -17,7 +17,7 @@ Without SQL/MED, applications must access required data sources themselves and p
 
 With SQL/MED, the data access architecture becomes clearer:
 
-![在这里插入图片描述](/img/csdn/ab659ea2f77d.png)
+![](/img/csdn/ab659ea2f77d.png)
 
 However, while this architecture diagram appears simpler, it increases the database's IO and computation pressure. This goes against the modern trend of decoupling computation from the database to the application layer.
 
@@ -27,7 +27,7 @@ SQL/MED exists as a standard, and PostgreSQL supports the SQL/MED standard excel
 
 ### What is FDW?
 
-![在这里插入图片描述](/img/csdn/0c0845d79809.png)
+![](/img/csdn/0c0845d79809.png)
 
 PostgreSQL has supported FDW since version 9.1. Users can access external data (foreign data) through regular SQL statements. Foreign data is accessed via a foreign data wrapper (FDW). The FDW in PostgreSQL is itself a library — because different external data sources correspond to different FDW extensions, we often call it an FDW plugin.
 
@@ -205,7 +205,7 @@ Foreign table object views/tables can be messy — here's a quick organization:
 
 These views/tables look messy but actually have a clear structure. The 4 object types all follow the same data dictionary pattern:
 
-![在这里插入图片描述](/img/csdn/6805aee46c58.png)
+![](/img/csdn/6805aee46c58.png)
 
  - pg_xxx are base tables, the foundational information source for the 4 objects
  - information_schema._pg_xxx joins pg_xxx base tables with other info — it's a summary view with comprehensive information
@@ -378,7 +378,7 @@ Unlike most FDW plugins, postgres_fdw is an official plugin maintained by the Po
 
 #### SQL Execution Process
 
-![在这里插入图片描述](/img/csdn/2d6d90fc0f63.png)
+![](/img/csdn/2d6d90fc0f63.png)
 
   1. The parser generates a query tree from the foreign table definition.
   2. The planner connects to the foreign server.

@@ -260,4 +260,4 @@ PolarDB-CXL disadvantages:
 - The CXL 2.0 switch seems a bit dated — by the time the paper was published, switch devices supporting 3.2 were already available, and CXL 4.0 was announced in November 2025. We can predict future databases built on newer CXL standard switch devices.
 - The paper quality isn't actually as high as the MP paper — it mainly revolves around solutions for the CXL 2.0 switch physical hardware, which differs from the extensive database-layer design found in the PolarDB-MP paper.
 
-> Original link: https://lastdba.com/2025/11/30/论文精读polar-db-cxl2025-sigmod最佳工业论文/
+> Original link: https://lastdba.com/en/2025/11/30/paper-review-polar-db-cxl2025-sigmod-best-industry-paper/

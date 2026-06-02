@@ -1096,7 +1096,7 @@ In fact, we can see that long transactions and large transactions can make the e
 
 ### References
 
-Book: 《PostgreSQL实战》
+Book: PostgreSQL in Action
 
 Official Documentation:
 
@@ -1144,6 +1144,6 @@ https://zhuanlan.zhihu.com/p/311496301
 
 [Analyzing PostgreSQL Logical Replication Principles - CSDN Blog](https://blog.csdn.net/dafei1288/article/details/124629875)
 
-http://pigsty.cc/zh/blog/2021/03/03/postgres逻辑复制详解/
+http://pigsty.cc/en/blog/2021/03/03/postgres-logical-replication-explained/
 
 [Logical replication and logical decoding - Azure Database for PostgreSQL - Flexible Server | Microsoft Learn](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-logical)

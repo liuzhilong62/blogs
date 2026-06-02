@@ -170,7 +170,7 @@ However, this isn't a big issue in session scenarios, because truncate takes an 
 
 ## Feature Updates
 
-![在这里插入图片描述](/img/csdn/c1c4036557be.png)
+![](/img/csdn/c1c4036557be.png)
 
 There aren't many truncate feature updates. Just note that PG14 added support for truncating foreign tables. The prerequisite for truncating foreign tables is that the FDW must support the TRUNCATE API.
 
@@ -178,8 +178,8 @@ There aren't many truncate feature updates. Just note that PG14 added support fo
 
 ## Functional Differences Between pg TRUNCATE and Other Databases
 
-![在这里插入图片描述](/img/csdn/8b204baa363f.png)
-![在这里插入图片描述](/img/csdn/b7ebb636b6b2.png)
+![](/img/csdn/8b204baa363f.png)
+![](/img/csdn/b7ebb636b6b2.png)
 
 TRUNCATE being fast and an 8-level lock are already well-known traits. Compared to other databases, PG can also: **choose whether to reset sequences** (`RESTART IDENTITY` `CONTINUE IDENTITY`), **rollback**, and has **simple authorization**.
 

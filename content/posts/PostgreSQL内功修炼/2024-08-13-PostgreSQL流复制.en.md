@@ -107,14 +107,14 @@ At this point recovery.conf becomes recovery.done
 **4. Set up primary as standby**
 Configure the new standby's recovery.conf file. You can directly copy from the old standby and modify the IP and directory.
 ```shell
-vi $新备库/recover.conf
+vi $new_standby/recover.conf
 standby_mode = on
 primary_conninfo = 'host=172.17.100.150 port=5433 user=lzl password=lzl'
 recovery_target_timeline = 'latest'
 ```
 Configure postgres.conf, write hot_standby = on to enable queries on the standby
 ```shell
-vi $新备库/postgres.conf
+vi $new_standby/postgres.conf
 hot_standby = on
 ```
 Start the new standby
@@ -281,7 +281,7 @@ Both trigger_file and pg_ctl promote can activate the standby with a single comm
 
 
 #### References:
-《The Way of PostgreSQL》(修炼之道)
+《The Way of PostgreSQL》(self-cultivation)
 <https://www.postgresql.org/docs/current/warm-standby.html>
 
 <https://www.postgresql.org/docs/13/high-availability.html>

@@ -170,7 +170,7 @@ So long transaction issues involve both DML and query statements, though their l
 - Besides explicit savepoints, subtransactions can also arise from exceptions, frameworks, and tools
 
 
-[pg事务：子事务](https://liuzhilong.blog.csdn.net/article/details/130783474)
+[pg transactions: subtransactions](https://liuzhilong.blog.csdn.net/article/details/130783474)
 
 
 
@@ -278,7 +278,7 @@ https://developer.aliyun.com/article/14582
 - Hint bits also write transaction info to infomask, so visibility can be determined from tuple headers alone without accessing clog
 
 
-[pg事务：事务相关元组结构](https://liuzhilong.blog.csdn.net/article/details/130782857?spm=1001.2014.3001.5502)
+[pg transactions: tuple structure related to transactions](https://liuzhilong.blog.csdn.net/article/details/130782857?spm=1001.2014.3001.5502)
 
 ### 11. How NULL Values Are Stored and Whether Indexes Store NULLs
 
@@ -357,7 +357,7 @@ Commit log records transaction status. During the next visibility check on a tab
 **Why not write transaction status to the tuple header immediately?** Hint bits immediate update performs very poorly, so transaction status is first placed in clog, reducing PGXACT contention and improving performance.
 
 
-[pg事务：事务相关元组结构](https://blog.csdn.net/qq_40687433/article/details/130782857)
+[pg transactions: tuple structure related to transactions](https://blog.csdn.net/qq_40687433/article/details/130782857)
 
 
 ### 15. Database Join Methods and Their Applicable Scenarios
@@ -892,9 +892,9 @@ For example (incomplete list):
 5. Many more updates...
 
 
-[PG流复制详解](https://blog.csdn.net/qq_40687433/article/details/120000817)
+[PG Streaming Replication Explained](https://blog.csdn.net/qq_40687433/article/details/120000817)
 
-[pg内功修炼：逻辑复制](https://blog.csdn.net/qq_40687433/article/details/129291207)
+[PG Internals: Logical Replication](https://blog.csdn.net/qq_40687433/article/details/129291207)
 
 
 ### 19. What Is Streaming Replication Conflict and Why It Occurs
@@ -921,7 +921,7 @@ The standby is running a query on a table (from application or manual connection
 `vacuum_defer_cleanup_age`: specifies how many transactions vacuum delays dead tuple cleanup by; i.e., vacuum and vacuum full won't immediately clean just-deleted tuples.
 
 
-[PG流复制详解](https://blog.csdn.net/qq_40687433/article/details/120000817)
+[PG Streaming Replication Explained](https://blog.csdn.net/qq_40687433/article/details/120000817)
 
 ### 20. PostgreSQL Permission System Overview
 
@@ -934,7 +934,7 @@ Hard to summarize comprehensively; it's somewhat complex. Key points:
 - Read-only and read-write permissions can be managed via roles
 
 
-[PostgreSQL学徒:又被权限搞晕了？拿捏！](https://mp.weixin.qq.com/s/jQP36rXZb4sgA71AaIJ-Sw)
+[PostgreSQL Apprentice: Confused by Permissions? Master them here!](https://mp.weixin.qq.com/s/jQP36rXZb4sgA71AaIJ-Sw)
 
 ### 21. Common High Availability Solutions, Selection Criteria, Pros and Cons
 
@@ -993,7 +993,7 @@ Cons: same-city remote can't directly read-only access, higher resource usage, n
 
 ![Insert image description here](/img/csdn/3578c8002447.png)
 
-（[PolarDB for PostgreSQL 三节点功能介绍](https://ucc-private-download.oss-cn-beijing.aliyuncs.com/ab3f233b4a4c405986b2a8196cb53b47.pdf?Expires=1708410598&OSSAccessKeyId=LTAIvsP3ECkg4Nm9&Signature=O9UIudjtFyMmQW4eZf2BlClhVDk%3D)）
+[PolarDB for PostgreSQL Three-Node Feature Introduction](https://ucc-private-download.oss-cn-beijing.aliyuncs.com/ab3f233b4a4c405986b2a8196cb53b47.pdf?Expires=1708410598&OSSAccessKeyId=LTAIvsP3ECkg4Nm9&Signature=O9UIudjtFyMmQW4eZf2BlClhVDk%3D)
 
 Pros: read/write separation, can add non-voting nodes, failover, logger nodes participate in election/data flow/backup
 Cons: ...
@@ -1025,17 +1025,17 @@ Cons: (seemingly) no election mechanism; docs heavy on text, light on diagrams
 
 
 
-崔健：PostgreSQL的高可以架构设计与实践
+Cui Jian: PostgreSQL High Availability Architecture Design and Practice
 
 https://www.pgpool.net/docs/latest/en/html/example-cluster.html
 
-[汪总： Postgresql 高可用](http://www.postgres.cn/downfiles/pgconf_2018/PostgresChina2018_%E6%B1%AA%E6%B4%8B_PG%E4%B9%8B%E9%AB%98%E5%8F%AF%E7%94%A8%E7%89%B9%E6%80%A7%E3%80%81%E5%B7%A5%E5%85%B7%E5%8F%8A%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1.pdf)
+[Wang Yang: PostgreSQL High Availability Features, Tools, and Architecture Design](http://www.postgres.cn/downfiles/pgconf_2018/PostgresChina2018_%E6%B1%AA%E6%B4%8B_PG%E4%B9%8B%E9%AB%98%E5%8F%AF%E7%94%A8%E7%89%B9%E6%80%A7%E3%80%81%E5%B7%A5%E5%85%B7%E5%8F%8A%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1.pdf)
 
-[使用Patroni和HAProxy创建高度可用的PostgreSQL集群](https://cloud.tencent.com/developer/article/1185379)
+[Creating a Highly Available PostgreSQL Cluster with Patroni and HAProxy](https://cloud.tencent.com/developer/article/1185379)
 
 https://www.percona.com/sites/default/files/eBook-PostgreSQL-High-Availability.pdf
 
-[PolarDB for PostgreSQL 三节点功能介绍](https://ucc-private-download.oss-cn-beijing.aliyuncs.com/ab3f233b4a4c405986b2a8196cb53b47.pdf?Expires=1708410598&OSSAccessKeyId=LTAIvsP3ECkg4Nm9&Signature=O9UIudjtFyMmQW4eZf2BlClhVDk%3D)
+[PolarDB for PostgreSQL Three-Node Feature Introduction](https://ucc-private-download.oss-cn-beijing.aliyuncs.com/ab3f233b4a4c405986b2a8196cb53b47.pdf?Expires=1708410598&OSSAccessKeyId=LTAIvsP3ECkg4Nm9&Signature=O9UIudjtFyMmQW4eZf2BlClhVDk%3D)
 
 https://cloud.google.com/architecture/architectures-high-availability-postgresql-clusters-compute-engine
 
@@ -1046,7 +1046,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.htm
 
 ![Insert image description here](/img/csdn/f2ec64d6d8a4.png)
 
-[PG流复制详解](https://blog.csdn.net/qq_40687433/article/details/120000817)
+[PG Streaming Replication Explained](https://blog.csdn.net/qq_40687433/article/details/120000817)
 
 
 ### 23. Transaction ID Wraparound Causes and Maintenance Optimization
@@ -1121,9 +1121,9 @@ https://www.interdb.jp/pg/
 
 https://www.postgresql.org/docs/16/routine-vacuuming.html#VACUUM-FOR-WRAPAROUND
 
-[深入理解PostgreSQL冻结炸弹](https://mp.weixin.qq.com/s/p6aFhghpDEGu6lIBD8A5Yw)
+[Deep Dive into PostgreSQL Freeze Bomb](https://mp.weixin.qq.com/s/p6aFhghpDEGu6lIBD8A5Yw)
 
-[pg事务：事务ID](https://blog.csdn.net/qq_40687433/article/details/130782577)
+[pg transactions: transaction ID](https://blog.csdn.net/qq_40687433/article/details/130782577)
 
 
 ### 24. Vacuum / Autovacuum Functions and Tuning
@@ -1220,7 +1220,7 @@ CREATE INDEX requires a ShareLock, which conflicts with DML's RowExclusiveLock. 
 4. Invalid indexes still get updated by DML
 5. Partition parent tables don't support CIC index creation; create indexes with CIC on child partitions one by one, then create the index on the parent with ONLY
 
-[学徒 深度剖析CIC](https://mp.weixin.qq.com/s/Sayutoyj7QmV5Nl8EFlwiQ)
+[Apprentice: Deep Dive into CIC](https://mp.weixin.qq.com/s/Sayutoyj7QmV5Nl8EFlwiQ)
 
 
 ### 27. HOT Principle
@@ -1347,7 +1347,7 @@ Replication slot hazards:
 
 Actually, replication slots have no inherent hazards. Their primary function is simplifying WAL log management. Without slots, you still need WAL management strategies. The PG community recommends using slots. Just note: always clean up unused slots to prevent them holding old positions that block WAL cleanup, filling the disk. Additionally, DBAs shouldn't casually drop slots — once dropped, position info is lost, and downstream links may need data reinitialization and resynchronization. Better to confirm whether the replication link can restart syncing.
 
-[pg内功修炼：逻辑复制](https://blog.csdn.net/qq_40687433/article/details/129291207)
+[PG Internals: Logical Replication](https://blog.csdn.net/qq_40687433/article/details/129291207)
 
 
 ### 30. Why Deadlocks Occur and Deadlock Detection Mechanism
@@ -1383,9 +1383,9 @@ PG natively supports declarative partitioning and inheritance partitioning. Comm
 **Disadvantages of partitioned tables:**
 
 - In PG, partitions are also tables; too many tables cause slow parsing and large relcache metadata caching
-- Too many tables may cause errors. Reference: [较少的分区也报错too many range table entries](https://editor.csdn.net/md/?articleId=131497779)
+- Too many tables may cause errors. Reference: [Even Few Partitions Can Trigger "too many range table entries"](https://editor.csdn.net/md/?articleId=131497779)
 - Even if partition count doesn't error, without partition pruning during plan generation (may happen at execution), EXPLAIN output becomes very large, and logs become bloated with long plans
-- Strange issues: [不同用户查看到不同的执行计划](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
+- Strange issues: [Different Users Seeing Different Execution Plans](https://mp.weixin.qq.com/s?__biz=MzUyOTAyMzMyNg==&mid=2247489813&idx=1&sn=22360e2bfd40fc2d0caed0a9d825b1d4&chksm=fa663124cd11b832953e789127927ffa0d63d6c948ca8934d5317b8eaae6e71374041ec038f7&mpshare=1&srcid=0728JrXnHdxnfgRVzqosBNcv&sharer_sharetime=1690509489198&sharer_shareid=0412ea33e50b471b98d8859a5c431367&from=singlemessage&scene=1&subscene=10000&sessionid=1690509419&clicktime=1690509545&enterid=1690509545&ascene=1&fasttmpl_type=0&fasttmpl_fullversion=6785798-en_US-zip&fasttmpl_flag=0&realreporttime=1690509545257&devicetype=android-29&version=28002658&nettype=WIFI&abtest_cookie=AAACAA%3D%3D&lang=en&countrycode=CN&exportkey=n_ChQIAhIQCCtq2jm3UsFznlVjxFEOWBLaAQIE97dBBAEAAAAAABKTCFyWAsoAAAAOpnltbLcz9gKNyK89dVj0LyxnG1pA6NiO6PHIsQ0Hy2N7QRbizb9SHdquaFOpOqANqG8jLDcioswZyRnYknjG4bSqNIIKm%2BpRIlK%2FVJxuwolH2%2FQJKSLg4YjccDktYYscUDvYSfHFx1ScEXZkOkbVqrvbBCPy6Gh2GnzulFuuIU68afNtsoBdzZTqHYbL0BfsAUhsz1iGAfSep642UT2CBpWSHWJQvndnwhZxjJ6%2FWO%2FI%2FqwncggiVeDNiv4vwXhluDNn&pass_ticket=mrpzS3wggBDzL9Ua2FmX5v1rYh6zKOnQ4og6oKcKv0ZXRfNBSUpSkGdTAcfXqgDo&wx_header=3)
 
 **Major limitations of PG native partitioned tables:**
 
@@ -1405,7 +1405,7 @@ PG natively supports declarative partitioning and inheritance partitioning. Comm
 
 
 
-[PostgreSQL分区表](https://blog.csdn.net/qq_40687433/article/details/132525655)
+[PostgreSQL Partitioned Tables](https://blog.csdn.net/qq_40687433/article/details/132525655)
 
 ### 33. Soft Parsing vs Hard Parsing Concepts
 
@@ -1487,7 +1487,7 @@ choose_custom_plan(CachedPlanSource *plansource, ParamListInfo boundParams)
 
 
 
-[Hehuyi_In 软硬解析的概念](https://blog.csdn.net/Hehuyi_In/article/details/128885660)
+[Hehuyi_In: Concept of Soft/Hard Parsing](https://blog.csdn.net/Hehuyi_In/article/details/128885660)
 
 
 ### 34. What Are VM / FSM / INIT Files
@@ -1563,7 +1563,7 @@ $ sar -B -s "08:00:00"
 09:48:01 PM 772977.43 507343.30 150255.50      0.05 466742.08      0.00   5821.28   5821.27    100.00
 ```
 
-Strong recommendation: [linux内存浅析](https://blog.csdn.net/qq_40687433/article/details/135492312)
+Strong recommendation: [Linux Memory Analysis](https://blog.csdn.net/qq_40687433/article/details/135492312)
 
 
 ### 36. Process Scheduling, D Process Hazards and Causes
@@ -1593,9 +1593,9 @@ D process meaning: Uninterruptible sleep state. Indicates the process is waiting
 
 Causes of D processes: The process is waiting for an external event, typically direct memory reclaim — synchronous and blocking application disk access. At that moment, disk-access-related processes are in D state. Note: D processes are triggered at the OS or hardware level, largely unrelated to the application itself (a little). For example, a PG large query session itself won't produce D processes and can be killed.
 
-[linux内存浅析](https://blog.csdn.net/qq_40687433/article/details/135492312)
+[Linux Memory Analysis](https://blog.csdn.net/qq_40687433/article/details/135492312)
 
-[PostgreSQL内存浅析](https://blog.csdn.net/qq_40687433/article/details/135541103)
+[PostgreSQL Memory Analysis](https://blog.csdn.net/qq_40687433/article/details/135541103)
 
 
 ### 37. Packet Capture and Analysis of PostgreSQL Protocol
@@ -1752,7 +1752,7 @@ Why three FINs instead of four?
 
 ![Insert image description here](/img/csdn/d0fa97105c11.png)
 
-（[TCP 四次挥手，可以变成三次吗？](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B)）
+（[TCP Four Waves: Can It Be Three?](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B)）
 
 Since TCP delayed ACK is enabled by default, three-FIN scenarios appear more often than four-FIN in captures.
 
@@ -1786,13 +1786,13 @@ https://mp.weixin.qq.com/s/dF4juaW-ttI0Zn1j0z6tag
 
 References:
 
-[Tcpdump一次抓包记录（Postgresql通信）](https://www.twblogs.net/a/5cbca833bd9eee0eff4612ff/?lang=zh-cn)
+[Tcpdump Packet Capture Record (PostgreSQL Communication)](https://www.twblogs.net/a/5cbca833bd9eee0eff4612ff/?lang=zh-cn)
 
-[学徒 DBA必备技能之网络丢包分析总结](https://mp.weixin.qq.com/s/dF4juaW-ttI0Zn1j0z6tag)
+[Apprentice DBA Essential Skills: Network Packet Loss Analysis Summary](https://mp.weixin.qq.com/s/dF4juaW-ttI0Zn1j0z6tag)
 
-[PgSQL协议分析:网络抓包](https://pigsty.cc/zh/blog/2018/01/05/pgsql%E5%8D%8F%E8%AE%AE%E5%88%86%E6%9E%90%E7%BD%91%E7%BB%9C%E6%8A%93%E5%8C%85/)
+[PgSQL Protocol Analysis: Network Packet Capture](https://pigsty.cc/zh/blog/2018/01/05/pgsql%E5%8D%8F%E8%AE%AE%E5%88%86%E6%9E%90%E7%BD%91%E7%BB%9C%E6%8A%93%E5%8C%85/)
 
-[TCP 四次挥手，可以变成三次吗？](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B)
+[TCP Four Waves: Can It Be Three?](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B)
 
 
 ### 38. Storage: SAN / NAS / DAS

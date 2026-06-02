@@ -2133,7 +2133,7 @@ Declarative partitioning has gone through many version enhancements and is now v
 
 ## References
 
-《PostgreSQL修炼之道》
+The Way of PostgreSQL
 
 https://mp.weixin.qq.com/s/NW8XOZNq0YlDZvx24H737Q
 https://www.postgresql.org/docs/current/ddl-partitioning.html

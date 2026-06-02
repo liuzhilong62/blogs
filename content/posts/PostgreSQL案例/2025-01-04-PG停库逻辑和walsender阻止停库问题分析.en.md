@@ -928,7 +928,7 @@ After going through the source code, it felt like I understood but also didn't �
 
 Summary of the fast shutdown flow:
 
-![pg fast停库流程.png](/img/csdn/464a8c3e13dd.png)
+![pg-fast-shutdown-flow.png](/img/csdn/464a8c3e13dd.png)
 
 (High resolution: <https://www.processon.com/view/link/6778a73a04a8344b9502637a>)
 

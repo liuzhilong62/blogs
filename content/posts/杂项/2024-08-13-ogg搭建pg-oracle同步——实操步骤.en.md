@@ -421,4 +421,4 @@ SQL> select * from oralzl.tab1;
 ​     1 lzl1          
 ```
 
-> Original link: https://lastdba.com/2024/08/13/ogg搭建pg-oracle同步实操步骤/
+> Original link: https://lastdba.com/en/2024/08/13/ogg-building-pg-oracle-sync/

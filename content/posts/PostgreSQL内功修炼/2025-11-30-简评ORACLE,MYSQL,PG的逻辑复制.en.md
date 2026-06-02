@@ -6,7 +6,7 @@ description: "A horizontal comparison of logical replication architectures and t
 ---
 
 ### PostgreSQL Logical Replication
-​​​​![在这里插入图片描述](/img/csdn/64e1d30f2123.png)
+​​​​![image](/img/csdn/64e1d30f2123.png)
 （https://www.pgconf.asia/JA/2017/wp-content/uploads/sites/2/2017/12/D2-A7-EN.pdf）
 
 PostgreSQL places all logical decoding related matters entirely within the database's replication slots for management — an all-inclusive approach. Early versions had somewhat limited logical replication support, but in recent major versions, logical replication has been one of the primary functional improvements.
@@ -20,7 +20,7 @@ Disadvantages of the PG approach:
 - Does the hardest work and takes the hardest hits. All logical decoding problems are exposed within the database: WAL backlog, large transactions, long transactions, reorder transaction sorting, privilege issues, streaming transmission — these are all problems PG has to deal with.
 
 ### MySQL's binlog
-![在这里插入图片描述](/img/csdn/668c1dc8ce20.png)
+![image](/img/csdn/668c1dc8ce20.png)
 (https://blog.fasterinfo.top/6243.html)
 
 MySQL places all decoded logical data locally — in binlog files. The approach is simple. *MySQL's binlog is roughly equivalent to PostgreSQL with full-table logical replication enabled and written locally.*
@@ -34,7 +34,7 @@ Disadvantages of the MySQL approach:
 - Two-phase commit. Because MySQL's primary-standby replication heavily depends on binlog, binlog data must be fully flushed to binlog files at commit time. A single commit must write two (or two kinds of) logs — binlog and redolog. Dual log writes are one of MySQL's eternal pain points.
 
 ### Oracle Logical Replication
-![在这里插入图片描述](/img/csdn/8978c46a1452.png)
+![image](/img/csdn/8978c46a1452.png)
 （https://www.oracle-scn.com/oracle-goldengate-integrated-capture/）
 
 Oracle itself does have logical Data Guard functionality, but virtually no one uses it. Here we'll only discuss LogMiner. The Oracle database itself provides an interface like LogMiner for parsing logs (e.g., OGG integrated capture mode), but has zero replication link management itself — it relies on third-party tools to create and manage replication links.

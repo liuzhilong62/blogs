@@ -808,7 +808,7 @@ Based on the paper, DiskANN's execution efficiency and recall outperform IVF and
 ## References
 
 [^0.11]: [Harnessing the Power of LLMs in Practice: A Survey on ChatGPT and Beyond](https://arxiv.org/pdf/2304.13712)
-[^0.1]: [一文讲清楚，AI、AGI、AIGC与AIGC、NLP、LLM，ChatGPT等概念](https://juejin.cn/post/7346233811212386345)
+[^0.1]: [A clear explanation of AI, AGI, AIGC, NLP, LLM, ChatGPT, and related concepts](https://juejin.cn/post/7346233811212386345)
 [^0.4]: [A Survey of Large Language Models](https://arxiv.org/pdf/2303.18223.pdf)
 [^1]: https://en.wikipedia.org/wiki/Prompt_engineering
 [^2]: [RAG original paper](https://arxiv.org/pdf/2005.11401)
@@ -847,4 +847,4 @@ Based on the paper, DiskANN's execution efficiency and recall outperform IVF and
 [^79]: Vyacheslav Efimov [Similarity Search, Part 5: Locality Sensitive Hashing (LSH)](https://towardsdatascience.com/similarity-search-part-5-locality-sensitive-hashing-lsh-76ae4b388203)
 [^80]: Jianshu [LSH (Locality Sensitive Hashing) Algorithm](https://www.jianshu.com/p/d4368c8f40cb) 
 
-> Original article (Chinese): [向量数据库相关概念](https://lastdba.com/2024/08/12/向量数据库：从0到original-paper/)
+> Original article (Chinese): [Vector Database Core Concepts](https://lastdba.com/2024/08/12/vector-database-core-concepts/)
