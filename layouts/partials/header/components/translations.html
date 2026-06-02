@@ -1,5 +1,5 @@
 {{ if .IsTranslated }}
-  {{/* Single-click toggle for exactly 2 languages; dropdown for 3+ */}}
+  {{/* Direct translation exists — link to it */}}
   {{ if eq (len .AllTranslations) 2 }}
     {{ range .AllTranslations }}
       {{ if ne .Lang $.Lang }}
@@ -34,5 +34,18 @@
         </li>
       </ul>
     </div>
+  {{ end }}
+{{ else }}
+  {{/* No direct translation — link to other language's homepage */}}
+  {{ if eq $.Lang "en" }}
+    <a href="/" class="text-2xl flex items-center bf-icon-color-hover"
+       aria-label="中文" title="中文">
+      {{ partial "icon.html" "language" }}
+    </a>
+  {{ else if eq $.Lang "zh" }}
+    <a href="/en/" class="text-2xl flex items-center bf-icon-color-hover"
+       aria-label="English" title="English">
+      {{ partial "icon.html" "language" }}
+    </a>
   {{ end }}
 {{ end }}
