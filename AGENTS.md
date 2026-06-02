@@ -11,7 +11,7 @@
 - **托管**: GitHub Pages + Cloudflare CDN (橙色云 🧡)
 - **本地编辑**: Typora (macOS) + PicGo (图片上传)
 - **内容**: 80+ 篇 PostgreSQL 技术文章，中文写作
-- **多语言**: 2026-06 启用英文版 (lastdba.com/en/)。中文为默认语言，英文内容 `.en.md` 后缀
+- **多语言**: 2026-06 启用英文版 (lastdba.com/en/)。中文为默认语言，英文内容 `.en.md` 后缀。已部署 Cloudflare Worker 按 IP 地理位置自动跳转首页语言（🇨🇳→中文，其他→英文），Cookie 防重复跳转。
 - **目录**: `/Users/liuzhilong62/Documents/01-mygithub/blogs`
 
 ## 目录结构
@@ -248,6 +248,7 @@ showHero: false
 - **Cloudflare**: DNS 橙色云 🧡 proxy 模式, 亚太节点加速中国访问
 - **CNAME**: `static/CNAME` 文件包含 `lastdba.com`, 必须在每次部署的 `public/` 中存在, 防止 GitHub Pages 重置自定义域名
 - **Pages 设置**: Source → "GitHub Actions"
+- **语言自动跳转**: Cloudflare Worker `acceptedlanguages` 绑定 `lastdba.com/*`。源码在 `scripts/language-redirect-worker.js`。逻辑：按 IP 地理位置（CF-IPCountry）判断，🇨🇳 → 中文首页，其他 → `/en/`。Cookie `lang-pref` 防重复跳转（30天有效，用户手动切换语言后不再重定向）。已部署，不要重复配置。
 
 ## 设计原则
 
