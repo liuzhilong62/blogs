@@ -14,23 +14,23 @@ Existing answers: Hehuyi_In [Learning and Answering PostgreSQL Interview Questio
 
 ### 1. MVCC Implementation and Differences from Oracle
 
-ORACLE and MYSQL both use UNDO to implement multi-version concurrency control. Undo entries are recorded in **additional** undo tablespaces. If the UNDO segment is insufficient, an ora-01555 error occurs.
-![Insert image description here](/img/csdn/fec3e1c0263f.png)
+Oracle and MySQL both use undo to implement multi-version concurrency control. Undo entries are recorded in **additional** undo tablespaces. If the undo segment is insufficient, an ORA-01555 error occurs.
+![](/img/csdn/fec3e1c0263f.png)
 <https://www.slideshare.net/AmitBhalla2/less10-undo-15946188>
 
 PostgreSQL has no undo mechanism. To ensure transaction rollback, old tuples remain on the table. For example, an update inserts a new row while the old data stays in place. Tuple headers, clog, etc. determine which tuple version is valid. Visibility information in tuple headers includes xmin, xmax, cmin, cmax, infomask, and infomask2, stored in the tuple header.
 
-![Insert image description here](/img/csdn/f34dabdc091c.png)
+![](/img/csdn/f34dabdc091c.png)
 <https://www.interdb.jp/pg/pgsql05/03.html>
 
-Pros/cons: The undo approach requires extra undo space; space management is simpler. However, large transaction rollback is very troublesome since undo segments must be rolled back. The new-tuple approach makes large transaction rollback very fast, but this method creates dead tuples, requiring a vacuum mechanism to clean them. Vacuum freeze itself isn't directly related to dead tuple cleanup (though both are vacuum processes); freeze prevents transaction ID wraparound.
+Trade-offs: The undo approach requires extra undo space; space management is simpler. However, large transaction rollback is very troublesome since undo segments must be rolled back. The new-tuple approach makes large transaction rollback very fast, but this method creates dead tuples, requiring a vacuum mechanism to clean them. Vacuum freeze itself isn't directly related to dead tuple cleanup (though both are vacuum processes); freeze prevents transaction ID wraparound.
 
 
 ### 2. Why Table Bloat Occurs and Its Hazards
 
 **Why table bloat?**
 
-As above, due to PostgreSQL's unique MVCC mechanism, delete doesn't truly remove tuples, and update equals delete+insert. Old tuples cannot be removed by DML statements, so space only "grows" without "cleaning" — this is table bloat. Vacuum is generally needed to clean dead tuples and mark space as available; or vacuum full rewrites the table for compaction.
+As above, due to PostgreSQL's unique MVCC mechanism, delete doesn't truly remove tuples, and update equals delete+insert. Old tuples cannot be removed by DML statements, so space is only consumed, never released — this is table bloat. Vacuum is generally needed to clean dead tuples and mark space as available; or vacuum full rewrites the table for compaction.
 
 **Hazards of table bloat:**
 
@@ -46,7 +46,7 @@ As above, due to PostgreSQL's unique MVCC mechanism, delete doesn't truly remove
 - Does not immediately reclaim space, only marks it as available
 - If the last page of a table has no tuples, that page gets truncated
 
-![Insert image description here](/img/csdn/4bcffb429099.png)
+![](/img/csdn/4bcffb429099.png)
 (<https://www.interdb.jp/pg/pgsql06.html>)
 
 2. Autovacuum
@@ -59,7 +59,7 @@ As above, due to PostgreSQL's unique MVCC mechanism, delete doesn't truly remove
 - Table is completely rewritten; corresponding OS files are cleaned and rebuilt
 - Rebuilds indexes, FSM (free space map), VM (visibility map)
 
-![Insert image description here](/img/csdn/5c9458f68c2e.png)
+![](/img/csdn/5c9458f68c2e.png)
 
 4. pg_repack and other manual table rebuilds
 
@@ -132,7 +132,7 @@ The above handles 99.99% of table bloat problems. One type of bloat is harder to
 
 Regular queries don't generate transaction IDs but virtual transaction IDs (vxid). Virtual transaction IDs consist of backendID and a backend-local counter, unrelated to transaction ID (XID). However, although queries don't generate transaction IDs, they hold snapshots for visibility checks. Snapshots contain tuple xmin and other information.
 
-![Insert image description here](/img/csdn/9b24ddaad8e7.png)
+![](/img/csdn/9b24ddaad8e7.png)
 
 (https://www.interdb.jp/pg/pgsql05/05.html)
 
@@ -180,7 +180,7 @@ All schema changes are non-online because all ALTER TABLE operations require an 
 
 Impact on indexes? Impact on statistics? Does it require rewriting the table, causing long-held 8-level locks?
 
-![Insert image description here](/img/csdn/7b272ed64104.png)
+![](/img/csdn/7b272ed64104.png)
 
 [Schema Change Summary Chart](https://mp.weixin.qq.com/s/cg1tXiifC83p0hWMs92Cxw)
 
@@ -199,7 +199,7 @@ Summary:
 
 ### 6. Physical Backup Considerations (pg_start_backup)
 
-![Insert image description here](/img/csdn/a226f3f1899f.png)
+![](/img/csdn/a226f3f1899f.png)
 
 (https://postgrespro.com/media/2022/03/24/pgpro-backup-methods%20(1).pdf)
 
@@ -284,7 +284,7 @@ https://developer.aliyun.com/article/14582
 
 **How NULL values are stored:**
 
-![Insert image description here](/img/csdn/f3fc29d1f5cd.png)
+![](/img/csdn/f3fc29d1f5cd.png)
 
 - NULL is stored in the tuple header, not the tuple data area
 - One bit in infomask marks whether the tuple contains NULLs
@@ -364,7 +364,7 @@ Commit log records transaction status. During the next visibility check on a tab
 
 **1.1 Nested Loop Join**
 
-![Insert image description here](/img/csdn/20abc423c1e9.png)
+![](/img/csdn/20abc423c1e9.png)
 
 ```sql
 lzldb=# explain select a from lzl1,t3 where lzl1.col1=t3.a::text;
@@ -382,7 +382,7 @@ NL suits almost all scenarios; it's the simplest brute-force join. Generally sma
 
 **1.2 Materialized Nested Loop Join**
 
-![Insert image description here](/img/csdn/2b45752abb3b.png)
+![](/img/csdn/2b45752abb3b.png)
 
 ```sql
 testdb=# EXPLAIN SELECT * FROM tbl_a AS a, tbl_b AS b WHERE a.id = b.id;
@@ -401,7 +401,7 @@ This scenario is very common in real-world workloads.
 
 **1.3 Indexed Nested Loop Join (inner indexed)**
 
-![Insert image description here](/img/csdn/661dba35e09a.png)
+![](/img/csdn/661dba35e09a.png)
 
 ```sql
 testdb=# EXPLAIN SELECT * FROM tbl_c AS c, tbl_b AS b WHERE c.id = b.id;
@@ -415,13 +415,13 @@ testdb=# EXPLAIN SELECT * FROM tbl_c AS c, tbl_b AS b WHERE c.id = b.id;
 
 **1.4 NL Variants**
 
-![Insert image description here](/img/csdn/d21a425177c0.png)
+![](/img/csdn/d21a425177c0.png)
 
 All are essentially NL; the main variations are whether indexes are used on either table and whether Materialize is applied.
 
 **2.1 Merge Join**
 
-![Insert image description here](/img/csdn/9914756afd16.png)
+![](/img/csdn/9914756afd16.png)
 
 ```sql
 testdb=# EXPLAIN SELECT * FROM tbl_a AS a, tbl_b AS b WHERE a.id = b.id AND b.id < 1000;
@@ -445,7 +445,7 @@ Since indexes are sorted, and SQL may include DISTINCT, GROUP BY, SORT, MAX/MIN 
 
 **2.2 Materialized Merge Join**
 
-![Insert image description here](/img/csdn/fb637c9d769e.png)
+![](/img/csdn/fb637c9d769e.png)
 
 ```sql
 testdb=# EXPLAIN SELECT * FROM tbl_a AS a, tbl_b AS b WHERE a.id = b.id;
@@ -467,7 +467,7 @@ Materialize doesn't reduce table scans (both tables scanned once), but the sort 
 
 **2.3 Merge Join Variants**
 
-![Insert image description here](/img/csdn/7cfae9b6cfff.png)
+![](/img/csdn/7cfae9b6cfff.png)
 
 Similar to NL variants, mainly Materialize and index usage. When using indexes, since the index is inherently ordered, no extra sorting is needed:
 
@@ -488,7 +488,7 @@ So indexes and Materialize are very common in merge joins.
 
 **3.1 Hash Join**
 
-![Insert image description here](/img/csdn/53c4660e122d.png)![Insert image description here](/img/csdn/fb09a2a553f8.png)
+![](/img/csdn/53c4660e122d.png)![](/img/csdn/fb09a2a553f8.png)
 
 Hash join consists of build and probe phases.
 
@@ -510,7 +510,7 @@ Not fully understood; appears to support spilling to disk. To be revisited.
 
 **(1) BTREE**
 
-![Insert image description here](/img/csdn/f490c66d7714.png)
+![](/img/csdn/f490c66d7714.png)
 
 https://en.wikibooks.org/wiki/PostgreSQL/Index_Btree
 
@@ -527,9 +527,9 @@ Possible usage patterns:
 
 **(2) HASH**
 
-![Insert image description here](/img/csdn/a7e8e0b28860.png)
+![](/img/csdn/a7e8e0b28860.png)
 
-（https://leopard.in.ua/2015/04/13/postgresql-indexes）
+(https://leopard.in.ua/2015/04/13/postgresql-indexes)
 
 Index data is converted to 32-bit hash values stored in corresponding hash buckets; different hash values point to their respective data rows.
 
@@ -549,9 +549,9 @@ GIST excels at:
 
 RTREE:
 
-![Insert image description here](/img/csdn/f63754993caa.png)
+![](/img/csdn/f63754993caa.png)
 
-（https://en.wikipedia.org/wiki/R-tree）
+(https://en.wikipedia.org/wiki/R-tree)
 
 The most common index for GIS data is RTREE. Two-dimensional spatial data consists of coordinates; scanning coordinates one by one to find locations is slow. BTREE isn't suitable for such data, so RTREE emerged. RTREE's core concept is grouping nearby points using rectangles at different hierarchy levels; finer grouping yields more precise positioning.
 
@@ -566,9 +566,9 @@ Space-Partitioned GIST is similar to GIST, also an index creation framework. SP-
 
 Quadtrees:
 
-![Insert image description here](/img/csdn/2103e76b673a.png)
+![](/img/csdn/2103e76b673a.png)
 
-（https://en.wikipedia.org/wiki/Quadtree）
+(https://en.wikipedia.org/wiki/Quadtree)
 
 Q-TREE comes in square, rectangular, and various shapes. The most "orthodox" Q-TREE as shown above generally has these properties:
 
@@ -577,19 +577,19 @@ Q-TREE comes in square, rectangular, and various shapes. The most "orthodox" Q-T
 
 K-d trees:
 
-![Insert image description here](/img/csdn/656f08fc9ac3.png)
+![](/img/csdn/656f08fc9ac3.png)
 
-![Insert image description here](/img/csdn/05d79891bd23.png)
+![](/img/csdn/05d79891bd23.png)
 
-（https://en.wikipedia.org/wiki/K-d_tree）
+(https://en.wikipedia.org/wiki/K-d_tree)
 
 K-dimensional trees manage multi-dimensional points using multi-dimensional space concepts; each non-leaf node is split in two. For example, the 3D space diagram above is a 3-dimensional k-d tree model: first split (red) divides the entire space in half; second split (green) divides subspaces in half... until no further division is possible. The second diagram shows the tree structure of a 3D k-d tree (don't mistake it for BTREE!); this tree has only 3 dimensions: Name, Age, Salary.
 
 Radix-tree:
 
-![Insert image description here](/img/csdn/157f00ff6b48.png)
+![](/img/csdn/157f00ff6b48.png)
 
-（https://en.wikipedia.org/wiki/Radix_tree）
+(https://en.wikipedia.org/wiki/Radix_tree)
 
 Radix: each child synthesizes its parent. Key lookup complexity is O(path length); if common prefixes exist, complexity is higher.
 
@@ -682,7 +682,7 @@ Full-text GIN indexes first tokenize the indexed field (to_tsvector). Example: d
 
 Then indexing by tokens and their ctids:
 
-![Insert image description here](/img/csdn/815fee8ad284.png)
+![](/img/csdn/815fee8ad284.png)
 
 (https://postgrespro.com/blog/pgsql/4261647)
 
@@ -693,7 +693,7 @@ The index is sorted by token order, similar to BTREE; leaf nodes store ctids poi
 for "mani" — (0,2).
 for "slitter" — (0,1), (0,2), (1,2), (1,3), (2,2).
 
-![Insert image description here](/img/csdn/49ae172a7923.png)
+![](/img/csdn/49ae172a7923.png)
 
 
 **GIN updates:**
@@ -707,9 +707,9 @@ This makes GIN updates very expensive. Batch updates are typically better than r
 
 Besides batch updates, GIN provides fast update functionality (fastupdate = true):
 
-![Insert image description here](/img/csdn/891a4e0ed575.png)
+![](/img/csdn/891a4e0ed575.png)
 
-（https://www.pgcon.org/2016/schedule/attachments/434_Index-internals-PGCon2016.pdf）
+(https://www.pgcon.org/2016/schedule/attachments/434_Index-internals-PGCon2016.pdf)
 
 GIN fast update:
 
@@ -732,9 +732,9 @@ https://postgrespro.com/blog/pgsql/4261647
 
 **(6) BRIN**
 
-![Insert image description here](/img/csdn/0ee340aa3ea8.png)
+![](/img/csdn/0ee340aa3ea8.png)
 
-（https://postgrespro.com/blog/pgsql/5967830）
+(https://postgrespro.com/blog/pgsql/5967830)
 
 BRIN is not a tree-type index. Data is grouped in multiple pages (or blocks) as one range (similar to range partition but not physically partitioned). The table is divided into ranges, hence the name Block Range Index (BRIN).
 
@@ -756,9 +756,9 @@ Since only key value ranges and ctids are stored, data lookup requires accessing
 
 Whether index key order matches storage order is critical. For example, non-sequentially stored extra key value data may be on "distant" pages, requiring extra IO to access distant data pages. Worst case, it may scan the entire table:
 
-![Insert image description here](/img/csdn/46ee8f7372ff.png)
+![](/img/csdn/46ee8f7372ff.png)
 
-（https://www.pgcon.org/2016/schedule/attachments/434_Index-internals-PGCon2016.pdf）
+(https://www.pgcon.org/2016/schedule/attachments/434_Index-internals-PGCon2016.pdf)
 
 **BRIN suitable scenarios:**
 
@@ -776,9 +776,9 @@ Although GIN requires to_tsvector() (or direct tsvector) for tokenization, GIN d
 
 RUM indexes attach token position information alongside ctids, compared to GIN:
 
-![Insert image description here](/img/csdn/9c5cdfb1d385.png)
+![](/img/csdn/9c5cdfb1d385.png)
 
-（https://postgrespro.com/blog/pgsql/4262305）
+(https://postgrespro.com/blog/pgsql/4262305)
 
 RUM, similar to GIN, suits full-text indexing, with additional capabilities:
 
@@ -792,9 +792,9 @@ https://postgrespro.com/blog/pgsql/4262305
 
 A Bloom filter quickly determines whether an element is in a set. Bloom filters can have false positives — "in set" isn't guaranteed true, but "not in set" is guaranteed true. BLOOM indexes are also non-tree, flat structures (requiring recheck like BRIN).
 
-![Insert image description here](/img/csdn/bf06b10cd015.png)
+![](/img/csdn/bf06b10cd015.png)
 
-（https://en.wikipedia.org/wiki/Bloom_filter）
+(https://en.wikipedia.org/wiki/Bloom_filter)
 
 Bloom indexes can index many columns. Similar to hash indexes, but unlike hash indexes, they can specify hashed fields and combine them, with total length limited by the `length` parameter. Because of the segmented hashing and truncation, false positives exist. Shorter length means higher false positive probability (max length 4096 bits).
 
@@ -802,9 +802,9 @@ Bloom indexes can index many columns. Similar to hash indexes, but unlike hash i
 create index on ... using bloom(...) with (length=..., col1=..., col2=..., ...);
 ```
 
-![Insert image description here](/img/csdn/93a3ccefbd2d.png)
+![](/img/csdn/93a3ccefbd2d.png)
 
-（https://postgrespro.com/blog/pgsql/5967832）
+(https://postgrespro.com/blog/pgsql/5967832)
 
 https://www.postgresql.org/docs/current/bloom.html
 
@@ -848,25 +848,25 @@ Row locks in PG are in the row header, not implemented in memory.
 
 (1) After t1 updates without committing, it acquires exclusive locks on relation and transactionid:
 
-![Insert image description here](/img/csdn/16040258a95a.png)
+![](/img/csdn/16040258a95a.png)
 
 (2) t2 updating the same row gets blocked; this blocking is implemented via transactionid sharelock. t2 acquires both relation and tuple locks:
 
-![Insert image description here](/img/csdn/2cca36c19235.png)
+![](/img/csdn/2cca36c19235.png)
 
-![Insert image description here](/img/csdn/d3b2e8a88a88.png)
+![](/img/csdn/d3b2e8a88a88.png)
 
 (3) t3 updating this row gets blocked via tuple exclusive lock:
 
-![Insert image description here](/img/csdn/9f0527a73a0a.png)
+![](/img/csdn/9f0527a73a0a.png)
 
-![Insert image description here](/img/csdn/b5ea7c9fe3f1.png)
+![](/img/csdn/b5ea7c9fe3f1.png)
 
 In summary, **PG row locks are implemented jointly via transactionid locks, relation locks, and tuple locks:**
 
-![Insert image description here](/img/csdn/5160903bb82b.png)
+![](/img/csdn/5160903bb82b.png)
 
-《postgresql-internals-14》
+*postgresql-internals-14*
 
 https://postgrespro.com/blog/pgsql/5968005
 
@@ -875,11 +875,11 @@ https://postgrespro.com/blog/pgsql/5968005
 
 Streaming replication here generally refers to PG physical replication, synchronizing full WAL logs downstream for replay by the downstream PG instance at the physical block level:
 
-![Insert image description here](/img/csdn/d8149234af0e.png)
+![](/img/csdn/d8149234af0e.png)
 
 Logical replication requires logically decoding transaction information from WAL for relevant tables, ordering transactions via reorder buffer, then outputting data in the form determined by the output plugin. The downstream need not be a PG instance. Must have replication slots managing logical decoding, output plugin, reorder buffer, replication positions, etc., plus knowledge of replica identity, slot/sender status, and more:
 
-![Insert image description here](/img/csdn/2fde90f69b14.png)
+![](/img/csdn/2fde90f69b14.png)
 
 Logical replication has many issues but is increasingly widely used and is a key focus area for PG community updates.
 
@@ -925,7 +925,7 @@ The standby is running a query on a table (from application or manual connection
 
 ### 20. PostgreSQL Permission System Overview
 
-![Insert image description here](/img/csdn/b45d38154897.png)
+![](/img/csdn/b45d38154897.png)
 
 Hard to summarize comprehensively; it's somewhat complex. Key points:
 
@@ -951,52 +951,52 @@ Below are some known architectures:
 
 **pgpool-II+watchdog**:
 
-![Insert image description here](/img/csdn/748bd7fc3712.png)
+![](/img/csdn/748bd7fc3712.png)
 
-（https://www.pgpool.net/docs/latest/en/html/example-cluster.html）
+(https://www.pgpool.net/docs/latest/en/html/example-cluster.html)
 
-Pros: automatic failover, read/write separation, load balancing, watchdog election
-Cons: complex configuration, pgpool doesn't fully support all PG features, pgpool performance overhead, depends on watchdog election
+Advantages: automatic failover, read/write separation, load balancing, watchdog election
+Disadvantages: complex configuration, pgpool doesn't fully support all PG features, pgpool performance overhead, depends on watchdog election
 
 
 
 **patroni+etcd**:
 
-![Insert image description here](/img/csdn/ed1ce367a7b8.png)
+![](/img/csdn/ed1ce367a7b8.png)
 
-Pros: GUI (patroni), automatic failover, majority election
-Cons: learning curve, doesn't support other databases (patroni)
+Advantages: GUI (patroni), automatic failover, majority election
+Disadvantages: learning curve, doesn't support other databases (patroni)
 
 
 
 **patroni+pgbouncer+haproxy+etcd**:
 
-![Insert image description here](/img/csdn/e7604c9266a6.png)
+![](/img/csdn/e7604c9266a6.png)
 
-（https://www.percona.com/sites/default/files/eBook-PostgreSQL-High-Availability.pdf）
+(https://www.percona.com/sites/default/files/eBook-PostgreSQL-High-Availability.pdf)
 
-Pros: open-source stack: haproxy for load balancing, pgbouncer for connection pooling, patroni for cluster management, etcd for election
-Cons: very complex configuration
+Advantages: open-source stack: haproxy for load balancing, pgbouncer for connection pooling, patroni for cluster management, etcd for election
+Disadvantages: very complex configuration
 
 **Ping An Financial Cloud rasesql architecture**:
 
-![Insert image description here](/img/csdn/78b4331a5822.png)
+![](/img/csdn/78b4331a5822.png)
 
-（https://www.ocftcloud.com/ssr/help/database/RASESQL/intro.Architecture）
+(https://www.ocftcloud.com/ssr/help/database/RASESQL/intro.Architecture)
 
-Pros: failover support, simple architecture
-Cons: same-city remote can't directly read-only access, higher resource usage, no election (?)
+Advantages: failover support, simple architecture
+Disadvantages: same-city remote can't directly read-only access, higher resource usage, no election (?)
 
 **Alibaba Cloud Polar-X**:
 
-![Insert image description here](/img/csdn/b3c6ace6a20f.png)
+![](/img/csdn/b3c6ace6a20f.png)
 
-![Insert image description here](/img/csdn/3578c8002447.png)
+![](/img/csdn/3578c8002447.png)
 
 [PolarDB for PostgreSQL Three-Node Feature Introduction](https://ucc-private-download.oss-cn-beijing.aliyuncs.com/ab3f233b4a4c405986b2a8196cb53b47.pdf?Expires=1708410598&OSSAccessKeyId=LTAIvsP3ECkg4Nm9&Signature=O9UIudjtFyMmQW4eZf2BlClhVDk%3D)
 
-Pros: read/write separation, can add non-voting nodes, failover, logger nodes participate in election/data flow/backup
-Cons: ...
+Advantages: read/write separation, can add non-voting nodes, failover, logger nodes participate in election/data flow/backup
+Disadvantages: ...
 
 
 
@@ -1004,13 +1004,13 @@ Cons: ...
 
 Three architecture options:
 
-![Insert image description here](/img/csdn/b85525616eeb.png)
+![](/img/csdn/b85525616eeb.png)
 
 Google Cloud Native Architecture (MIG):
 
-![Insert image description here](/img/csdn/0cc376b9b922.png)
+![](/img/csdn/0cc376b9b922.png)
 
-Pros: three options to choose from, well-documented! (the other two derive from open-source architectures with similar pros/cons; MIG cloud-native approach described below)
+Advantages: three options to choose from, well-documented! (the other two derive from open-source architectures with similar advantages and disadvantages; MIG cloud-native approach described below)
 MIG advantages: doesn't depend on PG native HA; uses Regional persistent disk for data HA. Primary zone network isolation; disk can be attached to zone B in the same region (within 1 minute).
 MIG disadvantages: no read replicas; only within-region failover (no multi-region deployment)
 
@@ -1018,10 +1018,10 @@ MIG disadvantages: no read replicas; only within-region failover (no multi-regio
 
 **Aurora for PG**:
 
-![Insert image description here](/img/csdn/6c3c996ceeb5.png)
+![](/img/csdn/6c3c996ceeb5.png)
 
-Pros: simple architecture, recovered primary node auto-joins cluster, multi-region deployment, standby readable
-Cons: (seemingly) no election mechanism; docs heavy on text, light on diagrams
+Advantages: simple architecture, recovered primary node auto-joins cluster, multi-region deployment, standby readable
+Disadvantages: (seemingly) no election mechanism; docs heavy on text, light on diagrams
 
 
 
@@ -1044,7 +1044,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.htm
 
 ### 22. Five Levels of synchronous_commit; Why Standby Queries Can't Immediately See Primary Inserts
 
-![Insert image description here](/img/csdn/f2ec64d6d8a4.png)
+![](/img/csdn/f2ec64d6d8a4.png)
 
 [PG Streaming Replication Explained](https://blog.csdn.net/qq_40687433/article/details/120000817)
 
@@ -1059,17 +1059,17 @@ However, transaction IDs have an upper limit. `TransactionId` is a 32-bit unsign
 
 Due to visibility rules, the 4.2 billion transactions must be split in half: one half represents the future, the other the past. The difference between max and min transactions in a PG instance cannot exceed 2.1 billion — hence the 2.1 billion transaction limit.
 
-![Insert image description here](/img/csdn/bbce62f757b4.png)
+![](/img/csdn/bbce62f757b4.png)
 
-（https://www.interdb.jp/pg/pgsql05/01.html）
+(https://www.interdb.jp/pg/pgsql05/01.html)
 
 **Transaction ID freezing:**
 
 Due to visibility rules, if a visible row (e.g., xid=100) differs from the latest transaction by more than 2.1 billion, it becomes invisible:
 
-![Insert image description here](/img/csdn/57a0de81e82c.png)
+![](/img/csdn/57a0de81e82c.png)
 
-（Forgot the source; look it up）
+(Forgot the source; look it up)
 
 To solve this, the transaction ID freezing mechanism was introduced. Freezing sets the xmin of overly old tuples to FrozenXID=2, older than all normal transactions. That is, txid=2 is visible to all normal transactions (txid>=3). In version 9.4+, t_infomask's xmin_frozen flag indicates frozen tuples rather than rewriting t_xmin to 2.
 
@@ -1081,7 +1081,7 @@ Lazy mode freeze which tuples: except pages marked all-visible in VM that get sk
 
 Lazy mode is more of a vacuum side-effect: since we're already concurrently vacuum scanning and cleaning dead tuples with pages already scanned, we might as well freeze eligible tuples.
 
-![Insert image description here](/img/csdn/47912e7b0750.png)
+![](/img/csdn/47912e7b0750.png)
 
 
 **Eager mode:** Lazy mode has a problem: it works alongside vacuum, skipping pages with no dead tuples (all-visible). If a page contains only live tuples (all-visible but not all-frozen) with very old xmin values, lazy mode alone can't freeze them. So eager mode is needed: skip pages already marked all-frozen in VM and freeze the rest. In real scenarios, eager mode is typically the one running periodically and requiring attention: **even if only one page in a table has tuples that are all inserts (even just one static page), eager mode is needed**.
@@ -1094,7 +1094,7 @@ Eager mode freeze triggers:
 
 Eager mode freeze which tuples: similar to lazy mode, except for all-frozen pages (lazy uses all-visible — different), freezes tuples whose xmin-to-active-transaction-ID gap exceeds `vacuum_freeze_min_age` (default 50M). In the diagram, tuple 11 is not frozen.
 
-![Insert image description here](/img/csdn/d24f548bb484.png)
+![](/img/csdn/d24f548bb484.png)
 
 
 **vacuum freeze command:** `VACUUM FREEZE` is equivalent to setting vacuum_freeze_min_age and vacuum_freeze_table_age to 0, performing eager mode freezing for all inactive xmin tuples.
@@ -1103,7 +1103,7 @@ Eager mode freeze which tuples: similar to lazy mode, except for all-frozen page
 
 **CLOG may also be updated:** Additionally, if freezing updates pg_database.datfrozenxid, unnecessary CLOG is also cleaned. CLOG records transaction status for determining "relatively new" transaction and tuple visibility. If a database's frozenxid has been advanced recently, meaning those "old" tuples have been marked as frozen — always visible — then "old" transaction status info in CLOG can be discarded.
 
-![Insert image description here](/img/csdn/1e864c9bc4a1.png)
+![](/img/csdn/1e864c9bc4a1.png)
 
 **Maintenance optimization:** (summarized from Can Zong's summary)
 
@@ -1229,11 +1229,11 @@ CREATE INDEX requires a ShareLock, which conflicts with DML's RowExclusiveLock. 
 
 Without HOT, every tuple update would update indexes. Below, one additional updated tuple adds one index entry, and the old index entry points to the dead tuple. This causes index update, index space, and index vacuum pressure.
 
-![Insert image description here](/img/csdn/4a5a7f3ac437.png)
+![](/img/csdn/4a5a7f3ac437.png)
 
 With HOT, in-page updates only update the tuple, not the index:
 
-![Insert image description here](/img/csdn/e618933424af.png)
+![](/img/csdn/e618933424af.png)
 
 HOT tuples correspond to HEAP_HOT_UPDATED and HEAP_ONLY_TUPLE bits in infomask:
 
@@ -1262,7 +1262,7 @@ lp(line pointer)=1's tuple points to row 2 via ctid(0,2); row 2 points to row 3.
 
 With HOT, vacuum only cleans dead tuples within the page without updating indexes:
 
-![Insert image description here](/img/csdn/c220fe22e28a.png)
+![](/img/csdn/c220fe22e28a.png)
 
 ```sql
 lzldb=> vacuum tt;
@@ -1318,7 +1318,7 @@ Index-only scan is a common and efficient scan method across databases: it retur
 
 The VM file not only supports vacuum skipping all-visible pages but also supports INDEX ONLY SCAN for visibility determination on all-visible pages:
 
-![Insert image description here](/img/csdn/b2b9809f61d7.png)
+![](/img/csdn/b2b9809f61d7.png)
 
 Reference: interdb
 
@@ -1341,7 +1341,7 @@ For physical replication, replication slots aren't strictly necessary; hot_stand
 
 For logical replication, replication slots are mandatory; one logical replication link corresponds to one slot. For logical replication, slots manage not only WAL logs but also logical decoding, output plugin, decoding/sending positions (LSN), allowing retransmission of decoded logs after replication interruption.
 
-![Insert image description here](/img/csdn/a3a4118829be.png)
+![](/img/csdn/a3a4118829be.png)
 
 Replication slot hazards:
 
@@ -1352,7 +1352,7 @@ Actually, replication slots have no inherent hazards. Their primary function is 
 
 ### 30. Why Deadlocks Occur and Deadlock Detection Mechanism
 
-![Insert image description here](/img/csdn/a158c01929e8.png)
+![](/img/csdn/a158c01929e8.png)
 
 Simplest case: transaction T1 holds resource 1, transaction T2 holds resource 2. If T1 tries to acquire resource 2 and T2 tries to acquire resource 1, a deadlock forms. Without management, deadlocks can wait indefinitely, so all DBMS have deadlock detection. Deadlocks usually indicate business logic issues. If no explicit cancellation of one transaction in the "ring" breaks it, PG auto-detects deadlocks and force-terminates one transaction via the `deadlock_timeout` parameter (default 1s); other transactions in the "ring" can continue.
 
@@ -1360,7 +1360,7 @@ https://postgrespro.com/blog/pgsql/5968020
 
 
 ### 31. SQL Performance Troubleshooting Approaches
-![Insert image description here](/img/csdn/2e1b3f17a0b2.png)
+![](/img/csdn/2e1b3f17a0b2.png)
 
 ### 32. Why Use Partitioned Tables, Advantages and Disadvantages
 
@@ -1491,7 +1491,7 @@ choose_custom_plan(CachedPlanSource *plansource, ParamListInfo boundParams)
 
 
 ### 34. What Are VM / FSM / INIT Files
-![Insert image description here](/img/csdn/d0c6c3c47a5b.png)
+![](/img/csdn/d0c6c3c47a5b.png)
 
 **Numeric suffix:** Files fork when exceeding 1GB (default); changeable at build time via `./configure --with-segsize`
 
@@ -1501,7 +1501,7 @@ choose_custom_plan(CachedPlanSource *plansource, ParamListInfo boundParams)
 
 **INIT:** A fork file only for unlogged tables, size 0, marking the data file as unlogged.
 
-《postgresql-internals-14》
+*postgresql-internals-14*
 
 
 ### 35. Memory Reclaim Mechanisms: kswapd / Direct Memory Reclaim / pdflush
@@ -1511,9 +1511,9 @@ choose_custom_plan(CachedPlanSource *plansource, ParamListInfo boundParams)
 Background memory reclaim (kswapd): When physical memory is tight, the kswapd kernel thread is woken to reclaim memory asynchronously, not blocking process execution.
 Direct memory reclaim: If background async reclaim can't keep up with process memory allocation requests, direct reclaim begins — synchronous, blocking process execution.
 
-![Insert image description here](/img/csdn/664b2fe2f965.png)
+![](/img/csdn/664b2fe2f965.png)
 
-（https://vivani.net/2022/06/14/linux-kernel-tuning-page-allocation-failure/)
+(https://vivani.net/2022/06/14/linux-kernel-tuning-page-allocation-failure/)
 
 **pages_low:** When available free pages drop below pages_low, buddy allocator wakes **kswapd**; kernel begins swapping pages to disk.
 **pages_min:** When available pages reach pages_min, page reclaim pressure is high because the memory zone urgently needs free pages. Allocator performs kswapd work synchronously — sometimes called direct reclaim.
@@ -1534,7 +1534,7 @@ kcompactd: page compaction specifically targets memory fragmentation cleanup (fl
 
 sar is one of the most comprehensive Linux system performance analysis tools, reporting on multiple dimensions: file read/write, syscall usage, disk I/O, CPU efficiency, memory usage, process activity, and IPC.
 
-![Insert image description here](/img/csdn/9f0b4a87e536.png)
+![](/img/csdn/9f0b4a87e536.png)
 
 `sar -B` observes kswapd and direct memory reclaim:
 
@@ -1576,13 +1576,13 @@ Since user space in virtual address space can't be accessed by other user proces
 
 Shared memory is one IPC (Inter-Process Communication) mechanism; others include message queues and semaphores. Shared memory is one of the fastest IPC mechanisms because it doesn't require inter-process data copying — processes access shared memory through their own address spaces.
 
-![Insert image description here](/img/csdn/d6a9535557f7.png)
+![](/img/csdn/d6a9535557f7.png)
 
-（https://www.geeksforgeeks.org/inter-process-communication-ipc/）
+(https://www.geeksforgeeks.org/inter-process-communication-ipc/)
 
 Shared memory has many implementations. In PG, shared_buffer defaults to mmap for shared memory (corresponds to `shared_memory_type`); parallel queries default to POSIX (corresponds to `dynamic_shared_memory_type`).
 
-![Insert image description here](/img/csdn/b2a8526ef63d.png)
+![](/img/csdn/b2a8526ef63d.png)
 
 (https://momjian.us/main/writings/pgsql/inside_shmem.pdf)
 
@@ -1696,68 +1696,68 @@ Now analyze tcpdump.cap with [Wireshark](https://www.wireshark.org/download.html
 
 1) Step 1 - Connection Request [1-10] — TCP three-way handshake [1-3]:
 
-![Insert image description here](/img/csdn/d79f57937f52.png)
+![](/img/csdn/d79f57937f52.png)
 
 - 37282->5432 sends SYN, seq=0
 - 5432->37282 sends SYN+ACK, seq=0 ack=1
 - 37282->5432 sends ACK, seq=1 ack=1
 
-![Insert image description here](/img/csdn/2c2b65905d60.png)
+![](/img/csdn/2c2b65905d60.png)
 
-（https://www.researchgate.net/publication/340247809_Computer_Network_Chapter_8_Transport_Layer_UDP_and_TCP）
+(https://www.researchgate.net/publication/340247809_Computer_Network_Chapter_8_Transport_Layer_UDP_and_TCP)
 
 2) Step 1 - Connection Request [1-10] — PGSQL protocol startup and authentication request [4-7]:
 
-![Insert image description here](/img/csdn/f1fe82c3a6ce.png)
+![](/img/csdn/f1fe82c3a6ce.png)
 
 After the three-way handshake, PSQL client immediately sends a PGSQL protocol startup message to PG server [4], info: >?, the protocol startup message.
 
-![Insert image description here](/img/csdn/376c522b4dd8.png)
+![](/img/csdn/376c522b4dd8.png)
 
 The above >? packet is 37282->5432. You don't need to check source/destination in Transmission Control Protocol. PGSQL protocol shows even less info than TCP, but it has direction: > means 37282->5432, < means 37282<-5432.
 
 Next PGSQL protocol message is authentication request [6], info: <R, 37282<-5432.
 
-![Insert image description here](/img/csdn/e0135443ee2d.png)
+![](/img/csdn/e0135443ee2d.png)
 
 3) Step 1 - Connection Request [1-10] — Three-way FIN [8-10]. After server sends PGSQL authentication request to client, client requests TCP disconnect, 3 TCP FINs (not 4; explained below). Note: at this point psql command line is waiting for password input...
 
-![Insert image description here](/img/csdn/7a7094b99256.png)
+![](/img/csdn/7a7094b99256.png)
 
 4) Step 2 - Password Entry [11-22] — Three-way handshake [11-13]. Because the first TCP connection ended, establishing a connection again starts from TCP... so another three-way handshake:
 
-![Insert image description here](/img/csdn/dd0ed1d5110b.png)
+![](/img/csdn/dd0ed1d5110b.png)
 
 5) Step 2 - Password Entry [11-22] — Password authentication [14-22]. Authentication phase is slightly more complex. [14-16] essentially does the same as [4-7] in step 1: client requests PGSQL protocol startup, server returns authentication request. Then [18-20] performs password authentication using **SCRAM-SHA-256** mechanism; password authentication actually transmits 4 packets, including [21]'s two R authentication messages. Then [21] connection established: first two R's are authentication complete; many S's represent Parameter status: application name, charset, timezone, etc.; K represents Backend key, returning forked backend PID; Z represents ready for query.
 
-![Insert image description here](/img/csdn/969f8aba1e26.png)
+![](/img/csdn/969f8aba1e26.png)
 
 5) Step 3 - SQL Query [23-25]
 
-![Insert image description here](/img/csdn/d68d274be7ab.png)
+![](/img/csdn/d68d274be7ab.png)
 
 [23] Q clearly represents Query, client sends packet containing SQL; [24] returns results: T represents Row Description (here only column name "count"); D represents data row, the count result is 4, data is plaintext unencrypted:
 
-![Insert image description here](/img/csdn/49c15b851c3e.png)
+![](/img/csdn/49c15b851c3e.png)
 
 C represents Command complete; Z represents ready.
 
 5) Step 4 - Disconnect [26-29]. [26] client actively sends session end message, PGSQL protocol (corresponds to \q); [27-29] again 3 TCP FINs.
 
-![Insert image description here](/img/csdn/9fb2ec1fbc1a.png)
+![](/img/csdn/9fb2ec1fbc1a.png)
 
 Why three FINs instead of four?
 
 "No more data to send" AND "TCP delayed ACK mechanism enabled" means the second and third FINs merge, resulting in three FINs:
 
-![Insert image description here](/img/csdn/d0fa97105c11.png)
+![](/img/csdn/d0fa97105c11.png)
 
-（[TCP Four Waves: Can It Be Three?](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B)）
+([TCP Four Waves: Can It Be Three?](https://www.xiaolincoding.com/network/3_tcp/tcp_three_fin.html#tcp-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B))
 
 Since TCP delayed ACK is enabled by default, three-FIN scenarios appear more often than four-FIN in captures.
 
 OK, simple PG packet capture and analysis complete. Summary network transmission diagram for this session:
-![Insert image description here](/img/csdn/8c246946c86e.png)
+![](/img/csdn/8c246946c86e.png)
 
 
 
@@ -1797,12 +1797,12 @@ References:
 
 ### 38. Storage: SAN / NAS / DAS
 
-![Insert image description here](/img/csdn/c25bdda59915.png)
+![](/img/csdn/c25bdda59915.png)
 
 
 ### 39. Lifecycle of an IO Request
 
 ![img](/img/csdn/4e36321eb908.png)
 
-（https://blog.csdn.net/Hehuyi_In/article/details/100715177?spm=1001.2014.3001.5501）
+(https://blog.csdn.net/Hehuyi_In/article/details/100715177?spm=1001.2014.3001.5501)
 
