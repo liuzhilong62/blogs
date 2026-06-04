@@ -5,6 +5,7 @@
  * - First visit to / from non-China IP → redirect to /en/, set cookie
  * - If cookie exists → never redirect (user chose their language)
  * - All other paths → pass through
+ * - Cookie 'lang-auto=1' valid for 30 days
  */
 
 export default {
@@ -26,16 +27,24 @@ export default {
 
     // Non-Chinese visitors → English homepage (first time only)
     if (country && country !== 'CN') {
-      const headers = new Headers({
-        'Location': '/en/',
-        'Set-Cookie': 'lang-auto=1; Path=/; Max-Age=2592000; SameSite=Lax',
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': '/en/',
+          'Set-Cookie': 'lang-auto=1; Path=/; Max-Age=2592000; SameSite=Lax',
+        },
       });
-      return new Response(null, { status: 302, headers });
     }
 
-    // Chinese visitors → stay on /, set cookie so we don't keep checking
+    // Chinese visitors → pass through + set cookie
     const response = await fetch(request);
-    response.headers.set('Set-Cookie', 'lang-auto=1; Path=/; Max-Age=2592000; SameSite=Lax');
-    return response;
+    // Cannot modify response.headers (immutable), so recreate with cookie added
+    const headers = new Headers(response.headers);
+    headers.set('Set-Cookie', 'lang-auto=1; Path=/; Max-Age=2592000; SameSite=Lax');
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   },
 };
