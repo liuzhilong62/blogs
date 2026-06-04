@@ -325,7 +325,7 @@ Type                                           N      (%)          Record size  
 CLOG/ZEROPAGE                                  1 (  0.00)                   30 (  0.00)                    0 (  0.00)                   30 (  0.00)
 ...
 ```
-Extending CLOG page is always in page units. In fact, at the end of a CLOG segment you can easily see 00s:
+CLOG pages are always extended at page granularity. In fact, at the end of a CLOG segment you can easily see 00s:
 ```
 hexdump 03C2
 0000000 5555 5555 5555 5555 5555 5555 5555 5555

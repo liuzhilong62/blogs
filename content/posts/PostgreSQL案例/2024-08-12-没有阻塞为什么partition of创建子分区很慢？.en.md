@@ -25,7 +25,7 @@ process 33569 still waiting for RowExclusiveLock on relation 53733 of database 1
 
 When `PARTITION OF` adds a partition, it acquires an AccessExclusiveLock (level 8) on the parent table, which blocks all operations on the partitioned table. Normally, adding a partition via `PARTITION OF` is very fast, and the lock is released immediately. However, if there's a long-running transaction on the partitioned table, the level 8 lock on the parent table must wait, causing subsequent blocking.
 
-(Stolen from [my own diagram](https://blog.csdn.net/qq_40687433/article/details/132525655)):
+(Adapted from [my own diagram](https://blog.csdn.net/qq_40687433/article/details/132525655)):
 ![diagram](/img/csdn/6c7f70fc3b60.png)
 
 However, in this case there was no long transaction on the table, yet `PARTITION OF` took 35 minutes.

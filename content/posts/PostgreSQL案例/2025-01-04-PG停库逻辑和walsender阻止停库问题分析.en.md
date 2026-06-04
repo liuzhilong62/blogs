@@ -75,7 +75,7 @@ Common signals used in PG:
 - `-12` or `-SIGUSR2`: Custom signal.
 - `-17` or `SIGCHLD`: Signal used by the pm process. When a child process exits, pm receives this signal to trigger child process reaping.
 
-The specific meaning of signals registered by each type of PG process can be found by reading the respective process source code.
+The specific meaning of signals registered by each type of PG process can be found by reading that process's source code.
 
 ### Shutdown Defined by pg_ctl
 

@@ -26,7 +26,7 @@ From the correlation between hits and CPU, we can analyze from the SQL hit persp
 
 We also analyzed metadata access — within snapshots, no metadata tables showed unusually high access.
 
-From the symptom analysis, neither SQL concurrency increase nor metadata anomalies were apparent. The reason for the SQL hit increase wasn't obvious at this point.
+At this stage, there was no obvious increase in SQL concurrency or metadata anomalies, so the spike in SQL buffer hits remained unexplained.
 
 
 
@@ -242,7 +242,7 @@ Summary of conditions for using the fast-path lock mechanism (all must be met):
 
 1. Is the row lock the cause or the effect? Is it a row lock problem, or did database performance degrade causing SQL to run slower and produce row locks?
 
-Row lock is the cause. The SQL execution count didn't change, but the SQL parameters shifted from scattered to concentrated — i.e., updates to the same row noticeably increased. From the benchmark data, updating the same row produces row lock and LWLock LockManager waits.
+Row lock is the cause. The SQL execution count didn't change, but the parameter values became concentrated on a small number of rows — i.e., updates to the same row noticeably increased. From the benchmark data, updating the same row produces row lock and LWLock LockManager waits.
 
 2. SQL execution count didn't increase — did SQL performance degrade?
 

@@ -63,7 +63,7 @@ Default 128MB. Recommended to configure at 25% of total memory. Because PostgreS
 
 **`shared_memory_type`**
 Specifies the shared memory implementation method, not only for shared_buffers but also for other shared data areas.
-The shared memory implementation varies by platform. (It appears) on Linux the default is `mmap`. Other values are:
+The shared memory implementation varies by platform. On Linux, the default appears to be `mmap`. Other values are:
 
 - `posix` (for POSIX shared memory allocated using `shm_open`)
 - `sysv` (for System V shared memory allocated via `shmget`)

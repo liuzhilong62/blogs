@@ -147,7 +147,7 @@ PolarRecv's design strategies:
 
 - Use mutex to protect the LRU structure. The mutex lock state indicates whether LRU was being modified at crash time. If so, LRU must be rebuilt; if not, use the LRU directly from CXL memory.
 - During B-tree SMO, a mini-transaction protects index pages. This mini-transaction is a two-phase lock corresponding to page locks. It's only flushed to the redo log when the mini-transaction commits. So during recovery, if an index page is found with a write lock, recover from the redo logs.
-- PolarCXL's read/write locks are stored in CXL memory. If a write lock still exists, it means the update was in an intermediate state at crash time and not completed. In this case, honestly read the page from the redo log file rather than reading an inconsistent page from CXL memory.
+- PolarCXL's read/write locks are stored in CXL memory. If a write lock still exists, it means the update was in an intermediate state at crash time and not completed. In this case, simply read the page from the redo log file rather than reading an inconsistent page from CXL memory.
 - During recovery, first obtain the maximum LSN from the redo log, then check the lock and LSN of pages in CXL memory. If a page's LSN in CXL memory is greater than the max LSN, rebuild the page using redo log information rather than using the CXL memory version.
 
 

@@ -10,7 +10,7 @@ description: "A comprehensive guide to PostgreSQL declarative partitioning, part
 ![Postgres Table Partitioning](/img/csdn/787a5ce076e9.png)
 Database partitioning splits table data into smaller physical shards to improve performance, availability, and manageability. Partitioned tables are a common optimization technique for large tables in relational databases. DBMS generally provide partition management, and applications can access partitioned tables directly without changing their architecture—though good performance requires proper partition access patterns.
 
-Partitioned tables are common database technology, but PostgreSQL partitioned tables have many unique characteristics: multiple implementation approaches, partitions being regular tables, partition maintenance strategies, SQL optimization considerations, and some known issues.
+Partitioned tables are a common database technology, but PostgreSQL partitioned tables have many unique characteristics: multiple implementation approaches, partitions being regular tables, partition maintenance strategies, SQL optimization considerations, and some known issues.
 
 ## Partition Table Implementations
 
