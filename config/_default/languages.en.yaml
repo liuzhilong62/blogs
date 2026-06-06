@@ -20,6 +20,7 @@ params:
     links:
       - github: "https://github.com/liuzhilong62"
       - x-twitter: "https://x.com/liuzhilong62"
+      - linkedin: "https://www.linkedin.com/in/zhilong-liu-141838136"
       - email: "mailto:liuzhilong62@outlook.com"
 
   homepage:
