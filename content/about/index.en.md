@@ -24,6 +24,7 @@ This blog is where I document my deep dives into PostgreSQL internals, productio
 
 - GitHub: [liuzhilong62](https://github.com/liuzhilong62)
 - X (Twitter): [@liuzhilong62](https://x.com/liuzhilong62)
+- LinkedIn: [zhilong-liu](https://www.linkedin.com/in/zhilong-liu-141838136)
 - Email: [liuzhilong62@outlook.com](mailto:liuzhilong62@outlook.com)
 
 All content is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
