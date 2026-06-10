@@ -7,6 +7,7 @@ defaultContentLanguage: "zh"
 enableRobotsTXT: true
 enableEmoji: true
 summaryLength: 80
+buildFuture: true
 pagination:
   pagerSize: 10
 

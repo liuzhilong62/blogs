@@ -1,6 +1,6 @@
 ---
 title: "浅析连接池和TCP探活"
-date: 2026-06-11
+date: 2026-06-10
 draft: false
 categories: ["杂项"]
 tags: ["TCP", "keepalive", "连接池", "PostgreSQL", "RST", "FIN"]

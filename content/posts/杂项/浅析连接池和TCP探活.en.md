@@ -1,6 +1,6 @@
 ---
 title: "A Brief Analysis of Connection Pools and TCP Probing"
-date: 2026-06-11
+date: 2026-06-10
 categories: ["Miscellaneous"]
 tags: ["TCP", "keepalive", "connection pool", "PostgreSQL", "RST", "FIN"]
 description: "Deep dive into TCP keepalive, FIN vs RST, and connection pool probing mechanisms — with hands-on packet capture tests"
