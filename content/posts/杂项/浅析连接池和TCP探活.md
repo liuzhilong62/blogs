@@ -1,3 +1,12 @@
+---
+title: "浅析连接池和TCP探活"
+date: 2026-06-11
+draft: false
+categories: ["杂项"]
+tags: ["TCP", "keepalive", "连接池", "PostgreSQL", "RST", "FIN"]
+description: "深度解析 TCP keepalive、FIN vs RST、连接池探活机制——附实战抓包测试"
+---
+
 > 本文AI率50%
 
 
