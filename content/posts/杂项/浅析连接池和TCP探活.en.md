@@ -1,5 +1,5 @@
 ---
-title: "Connection Pool Keepalive and Probing"
+title: "A Brief Analysis of Connection Pools and TCP Probing"
 date: 2026-06-11
 categories: ["Miscellaneous"]
 tags: ["TCP", "keepalive", "connection pool", "PostgreSQL", "RST", "FIN"]
