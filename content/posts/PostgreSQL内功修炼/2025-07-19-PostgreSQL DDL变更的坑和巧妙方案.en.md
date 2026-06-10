@@ -7,7 +7,7 @@ description: "A summary of common PostgreSQL DDL change pitfalls and clever work
 
 ![DDL Pitfalls and Solutions](/img/csdn/5f610ac9b703.png)
 
-Key points for understanding this diagram:
+## Key Points for Understanding This Diagram
 
 Before making changes:
 

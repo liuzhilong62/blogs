@@ -7,7 +7,9 @@ description: "总结PostgreSQL DDL变更中的常见陷阱与巧妙解决方案�
 
 ![DDL变更.png](/img/csdn/5f610ac9b703.png)
 
-理解这个图的关键点：
+
+
+## 理解这个图的关键点
 
 变更前的注意事项：
 
