@@ -23,3 +23,4 @@ showReadingTime: false
 - CSDN: [liuzhilong](https://liuzhilong.blog.csdn.net)
 - 墨天轮: [liuzhilong62](https://www.modb.pro/u/4587)
 - X: [@liuzhilong62](https://x.com/liuzhilong62)
+- LinkedIn: [zhilong-liu](https://www.linkedin.com/in/zhilong-liu-141838136)
