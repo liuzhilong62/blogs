@@ -2,27 +2,32 @@ main:
   - name: "Home"
     pageRef: "/"
     weight: 10
-  - name: "Cases"
-    pageRef: "categories/postgresql-cases"
+  - name: "BLOGS"
+    pageRef: "/posts/"
     weight: 20
-  - name: "Internals"
-    pageRef: "categories/postgresql-internals"
-    weight: 30
-  - name: "Source"
-    pageRef: "categories/postgresql-source-code"
-    weight: 40
-  - name: "Papers"
-    pageRef: "categories/paper-reviews"
-    weight: 50
-  - name: "Notes"
-    pageRef: "categories/reading-notes"
-    weight: 60
-  - name: "Talks"
+  - name: "TALKS"
     pageRef: "categories/tech-talks"
-    weight: 65
+    weight: 30
   - name: "About"
     pageRef: "about"
-    weight: 70
+    weight: 40
+
+subnavigation:
+  - name: "Cases"
+    pageRef: "categories/postgresql-cases"
+    weight: 10
+  - name: "Internals"
+    pageRef: "categories/postgresql-internals"
+    weight: 20
+  - name: "Source"
+    pageRef: "categories/postgresql-source-code"
+    weight: 30
+  - name: "Papers"
+    pageRef: "categories/paper-reviews"
+    weight: 40
+  - name: "Notes"
+    pageRef: "categories/reading-notes"
+    weight: 50
 
 footer:
   - name: "Home"

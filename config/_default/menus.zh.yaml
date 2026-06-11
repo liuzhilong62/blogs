@@ -2,27 +2,32 @@ main:
   - name: "首页"
     pageRef: "/"
     weight: 10
-  - name: "案例"
-    pageRef: "categories/postgresql案例"
+  - name: "BLOGS"
+    pageRef: "/posts/"
     weight: 20
-  - name: "内功"
-    pageRef: "categories/postgresql内功修炼"
-    weight: 30
-  - name: "源码"
-    pageRef: "categories/postgresql源码解析"
-    weight: 40
-  - name: "论文"
-    pageRef: "categories/论文解读"
-    weight: 50
-  - name: "笔记"
-    pageRef: "categories/读书笔记"
-    weight: 60
-  - name: "演讲"
+  - name: "TALKS"
     pageRef: "categories/演讲与ppt"
-    weight: 65
+    weight: 30
   - name: "关于"
     pageRef: "about"
-    weight: 70
+    weight: 40
+
+subnavigation:
+  - name: "案例"
+    pageRef: "categories/postgresql案例"
+    weight: 10
+  - name: "内功"
+    pageRef: "categories/postgresql内功修炼"
+    weight: 20
+  - name: "源码"
+    pageRef: "categories/postgresql源码解析"
+    weight: 30
+  - name: "论文"
+    pageRef: "categories/论文解读"
+    weight: 40
+  - name: "笔记"
+    pageRef: "categories/读书笔记"
+    weight: 50
 
 footer:
   - name: "首页"
