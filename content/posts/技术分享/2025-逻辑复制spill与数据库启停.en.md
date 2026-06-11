@@ -1,6 +1,6 @@
 ---
 title: "Logical Replication Spill and Database Start/Stop — IvorySQL 2025 Summit"
-date: 2025-05-10
+date: 2025-07-12
 categories: ["Tech Talks"]
 tags: ["PostgreSQL", "Logical Replication", "Spill", "Startup", "Shutdown", "Walsender"]
 description: "IvorySQL 2025 Summit — A case study on logical replication spill overflow and deep dive into PG database startup/shutdown logic"
