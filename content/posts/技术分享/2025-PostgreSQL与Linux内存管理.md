@@ -1,7 +1,7 @@
 ---
 title: "PostgreSQL与Linux内存管理 — PostgreSQL技术峰会重庆站"
 date: 2025-06-14
-categories: ["技术分享"]
+categories: ["演讲与PPT"]
 tags: ["PostgreSQL", "Linux", "内存管理", "Huge Pages", "NUMA"]
 description: "PostgreSQL技术峰会重庆站分享，深入PostgreSQL的内存体系与Linux内存管理的交互"
 ---
