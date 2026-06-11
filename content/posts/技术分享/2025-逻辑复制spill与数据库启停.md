@@ -10,6 +10,8 @@ description: "IvorySQL 2025生态大会分享，逻辑复制 spill 溢出案例�
 
 逻辑复制 spill 文件的产生机制与溢出案例分析、PG 数据库启动与停止的完整流程、walsender 进程在启停过程中的行为。
 
+
+[在线预览](https://view.officeapps.live.com/op/view.aspx?src=https://lastdba.com/slides/HOW2025生态大会-逻辑复制spill与数据库启停.pptx)
 ## 下载
 
 [逻辑复制spill与数据库启停.pptx](/slides/HOW2025生态大会-逻辑复制spill与数据库启停.pptx)

@@ -10,6 +10,8 @@ description: "PostgreSQL技术峰会重庆站分享，深入PostgreSQL的内存�
 
 PostgreSQL 的内存架构、共享内存与本地内存、Huge Pages 的配置与影响、NUMA 架构下的内存分配、Cgroup 内存限制、内存过量使用与 OOM 处理。
 
+
+[在线预览](https://view.officeapps.live.com/op/view.aspx?src=https://lastdba.com/slides/2025PostgreSQL技术峰会重庆站-PostgreSQL与Linux内存管理.pptx)
 ## 下载
 
 [PostgreSQL与Linux内存管理.pptx](/slides/2025PostgreSQL技术峰会重庆站-PostgreSQL与Linux内存管理.pptx)
