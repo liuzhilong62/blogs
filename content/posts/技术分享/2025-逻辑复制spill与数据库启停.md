@@ -1,5 +1,5 @@
 ---
-title: "逻辑复制spill与数据库启停 — IvorySQL 2025生态大会"
+title: "PostgreSQL的逻辑复制spill溢出案例和启停库逻辑"
 date: 2025-07-12
 categories: ["演讲与PPT"]
 tags: ["PostgreSQL", "逻辑复制", "spill", "启停库", "walsender"]

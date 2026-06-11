@@ -1,5 +1,5 @@
 ---
-title: "PostgreSQL and Linux Memory Management — PostgreSQL Summit Chongqing"
+title: "PostgreSQL and Linux Memory Management"
 date: 2025-06-14
 categories: ["Tech Talks"]
 tags: ["PostgreSQL", "Linux", "Memory Management", "Huge Pages", "NUMA"]
