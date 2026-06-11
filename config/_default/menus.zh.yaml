@@ -17,6 +17,9 @@ main:
   - name: "笔记"
     pageRef: "categories/读书笔记"
     weight: 60
+  - name: "演讲"
+    pageRef: "categories/演讲与ppt"
+    weight: 65
   - name: "关于"
     pageRef: "about"
     weight: 70

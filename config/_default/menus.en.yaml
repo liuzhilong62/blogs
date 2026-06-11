@@ -17,6 +17,9 @@ main:
   - name: "Notes"
     pageRef: "categories/reading-notes"
     weight: 60
+  - name: "Talks"
+    pageRef: "categories/tech-talks"
+    weight: 65
   - name: "About"
     pageRef: "about"
     weight: 70
