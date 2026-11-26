@@ -9,7 +9,7 @@
 - **作者**: liuzhilong62
 - **技术栈**: Hugo 0.161.1 + Blowfish 主题 (Git submodule)
 - **托管**: GitHub Pages + Cloudflare CDN (橙色云 🧡)
-- **本地编辑**: Typora (macOS) + PicGo (图片上传)
+- **本地编辑**: Typora (macOS)，图片本地保存，不使用任何图床/上传器；发布用 `scripts/publish-draft.py`
 - **内容**: 80+ 篇 PostgreSQL 技术文章，中文写作
 - **多语言**: 2026-06 启用英文版 (lastdba.com/en/)。中文为默认语言，英文内容 `.en.md` 后缀。Cloudflare Worker 仅在首页 `/` 按 IP 跳转（非🇨🇳→ `/en/`），`/en/` 及子路径不拦截。
 - **目录**: `/Users/liuzhilong62/Documents/01-mygithub/blogs`
@@ -49,7 +49,7 @@ blogs/
 │   └── img/                   # 文章图片 (764 张, 251MB)
 │       └── csdn/              # 从 CSDN 下载的防盗链图片 (gitignored)
 ├── layouts/                   # 自定义模板覆盖 (见下文清单)
-├── scripts/                   # 辅助脚本 (当前为空)
+├── scripts/                   # publish-draft.py (草稿发布) + language-redirect-worker.js
 ├── themes/blowfish/           # Git submodule
 ├── .github/workflows/
 │   └── hugo.yml               # Hugo 部署
@@ -151,21 +151,45 @@ hugo new posts/分类目录/slug.md
 - 短句为主, 口语化技术中文 (如 "库挂了" 而非 "数据库实例异常终止")
 - 标题用 `##` 起步 (h1 是文章标题, TOC 不渲染 h1)
 
-### 3. 插入图片 (PicGo + Typora)
+### 3. 插入图片（本地保存，不用 PicGo）
 
-**重要**: Typora macOS 版会写绝对路径, 这是已知问题。图片插入流程:
+**2026-11-26 起停用 PicGo / 任何图床。** 原因：`raw.githubusercontent.com` 在国内超时不可达，
+而 `lastdba.com/img/` 走 Cloudflare 同源可达（实测 200 + HIT 缓存）。图片必须进本站仓库，
+和页面同一个域名，内外网才都能打开。
 
-1. Typora 中粘贴图片 → PicGo 自动上传到 GitHub
-2. PicGo 生成 `https://raw.githubusercontent.com/liuzhilong62/blogs/main/static/img/xxx.png`
-3. Hugo render hook (`layouts/_default/_markup/render-image.html`) 构建时自动转换为 `/img/xxx.png`
+Typora 偏好设置（一次性）:
+- 插入图片时 → **复制到指定文件夹**，填 `./pic`（相对当前 md），或 `typora-copy-images-to: ./pic` frontmatter
+- 勾选 **优先使用相对路径** (`use_relative_path_for_img = 1`)
+- 上传服务设为 **None**，关掉 `allow_image_upload`，不再配 `custom_image_uploader: picgo upload`
 
-**不要手动修改图片路径**。render hook 处理一切。
+这样离线写作时图片就在草稿旁边，Typora 直接预览，断网也能写；图片走本地仓库，不经过任何第三方。
 
-PicGo 配置 (参考, 不要改动):
-- 仓库: `liuzhilong62/blogs`
-- 分支: `main`
-- 路径: `static/img/`
-- customUrl: 空 (使用 raw GitHub URL)
+### 3b. 发布草稿：`scripts/publish-draft.py`
+
+草稿可以放在仓库外（如 `doing/`）。发布时脚本把本地图片搬进 `static/img/` 并改写为站点同源 `/img/`：
+
+```bash
+# 先看要做什么，不写文件
+python3 scripts/publish-draft.py "/path/to/doing/武大之旅.md" --category 杂项 --date 2026-11-25 --dry-run
+
+# 确认后真正生成
+python3 scripts/publish-draft.py "/path/to/doing/武大之旅.md" --category 杂项 --date 2026-11-25
+
+# 然后按常规部署
+hugo --quiet && git add -A && git commit -m "post: 标题" && git push
+```
+
+脚本做的事：
+- 识别本地绝对路径 / 相对路径 / `./pic` 图片，复制进 `static/img/`（平铺，与现有 764 张一致）
+- 按 **md5 复用**仓库里已有的同内容图片，不重复上传；同名不同内容自动加 md5 前缀，绝不覆盖
+- 默认把 PNG 压成 **WebP q82**（实测 3.3MB → 0.2MB，省 ~94%），`--no-compress` 可关
+- 补规范 frontmatter（`title/date/draft/categories/description/showHero`），正文只改图片 URL
+- **显式写 `slug`**：否则 Hugo 的 `:slug` 会取 title，中文标题变成一长串 `%XX`
+- 图片文件缺失时 **拒绝发布**，避免线上 404
+- 不执行 hugo / git commit / push，这些交给上面的常规流程
+
+render hook (`layouts/_default/_markup/render-image.html`) 仍保留，兼容历史文章里的
+`../../../static/` 和 raw GitHub URL 两种旧写法；新文章直接写 `/img/` 即可，无需 hook 转换。
 
 ### 4. 发布
 
@@ -226,7 +250,7 @@ showHero: false
 | `layouts/_default/rss.xml` | **RSS 全文输出** — 添加 `<content:encoded>` 供 agent 和 RSS 阅读器消费 |
 | `layouts/index.llms.txt` | **AI agent 站点地图** — 纯文本文章索引 (按分类)，供 agent 快速发现 |
 | `layouts/index.llmsfull.txt` | **AI agent 全文** — 全站 Markdown 原文，供 agent 一次性摄入 |
-| `layouts/_default/_markup/render-image.html` | **图片路径转换** — PicGo raw URL → `/img/`, Typora 本地路径 → `/img/` |
+| `layouts/_default/_markup/render-image.html` | **历史图片路径兼容** — 旧 raw GitHub URL → `/img/`, `../../../static/` → `/img/`；新文章直接写 `/img/` |
 | `layouts/partials/custom-head.html` | favicon 多重声明 (覆盖 Blowfish 默认鱼图标) |
 | `layouts/partials/article-link/card.html` | 首页文章卡片 — 用 `description` 替代自动摘要 |
 | `layouts/partials/article-link/simple.html` | 分类页文章列表 — 用 `description` 替代自动摘要 |
@@ -238,7 +262,7 @@ showHero: false
 
 ## 图片处理铁律
 
-1. **图片路径不要手动改** — render hook 自动处理所有转换
+1. **图片一律本地保存、站点同源 `/img/`** — 不用 PicGo / GitHub raw / 任何外部图床。历史文章里的旧 URL 由 render hook 兜底转换，新文章统一写 `/img/xxx.png`；发布前用 `scripts/publish-draft.py` 搬运与压缩
 2. **CSDN 防盗链图片** — 已全部下载到 `static/img/csdn/` 并替换了 markdown 中的 URL。该目录在 `.gitignore` 中
 3. **图片压缩** — 当前 764 张图 251MB。新增图片前应考虑压缩
 4. **Chrome 缓存** — 图片更新后如果用户说 "还是看不到", 先让用户硬刷新 (Cmd+Shift+R) 或开隐身窗口。十有八九是 Chrome 缓存了旧的 404
@@ -264,7 +288,7 @@ showHero: false
 
 ## 常见踩坑
 
-1. **Typora 写绝对路径** — macOS 版 Typora 无视相对路径设置, 写 `/Users/.../static/img/xxx.png`。render hook 处理一部分, 但首选 PicGo 粘贴
+1. **Typora 写绝对路径** — macOS 版默认 `use_relative_path_for_img = 0` 会写 `/Users/.../pic/xxx.png`。改用本地保存 + 相对路径，并由 `publish-draft.py` 统一改写为 `/img/`（见 3 / 3b 节）
 2. **Hugo 版本** — 必须 0.158.0+, CI 固定 0.161.1. `brew install hugo` 默认最新版, 本地开发前确认版本
 3. **Submodule** — Blowfish 是 git submodule, clone 时需要 `--recurse-submodules`
 4. **YAML 菜单** — Blowfish 的 dropdown 子菜单在 YAML 下不可用, 全部用 flat menu
